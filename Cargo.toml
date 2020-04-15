@@ -1,0 +1,31 @@
+[package]
+name = "pingkeeper"
+description = """
+Launch a network-related subprocess and monitor network ping to keep it alive
+"""
+version = "1.0.0"
+authors = ["Ignacio Lago <ignacio@ignaciolago.com>"]
+edition = "2018"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+homepage = "https://github.com/ignlg/pingkeeper"
+repository = "https://github.com/ignlg/pingkeeper"
+keywords = [
+  "launcher",
+  "daemon",
+  "openvpn",
+  "vpn",
+  "network",
+  "monitor",
+  "ping"
+]
+
+[dependencies]
+structopt = "0.3"
+pipeliner = "1.0"
+rand = "0.7"
+nix = "0.17"
+
+[profile.release]
+debug = false
+lto = true

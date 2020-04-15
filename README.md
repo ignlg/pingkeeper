@@ -4,24 +4,82 @@
 
 Launch a network-related subprocess and monitor network ping to keep it alive
 
+## Installation
+
+### Download binary
+
+Download release binary from [releases page](https://github.com/ignlg/pingkeeper/releases).
+
+### Build your own
+
+Build with
+
+```
+cargo build --release
+```
+
+You will find your executable at `./target/release/pingkeeper`.
+
+## Usage
+
+```
+USAGE:
+    pingkeeper [FLAGS] [OPTIONS] <COMMAND>
+
+FLAGS:
+    -h, --help
+            Prints help information
+
+    -k, --keep-alive
+            Keep command alive?
+
+    -q, --quiet
+            Do not output anything from command output, also reduces -v by 1
+
+    -V, --version
+            Prints version information
+
+    -v
+            Verbose
+
+
+OPTIONS:
+        --boot-time <boot-time>
+            Seconds to check network after executing command [default: 5]
+
+        --check-time <check-time>
+            Seconds to check again after network is reachable [default: 5]
+
+        --hosts <hosts>
+            Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
+
+        --ping-opt <opts>
+            Options for ping command [default: -c1]
+
+
+ARGS:
+    <COMMAND>
+            Command to run
+```
+
 ## Changelog / Roadmap
 
 ### v1.0.0
 
-- [ ] launch command when ping fails.
+- [x] launch command when ping fails.
 
-- [ ] opt `--hosts`; default: `"8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1"`.
-- [ ] detect if network is reachable.
-- [ ] opt `--ping-opt`, ping options; default: `"-c1"`.
+- [x] opt `--hosts`; default: `"8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1"`.
+- [x] detect if network is reachable.
+- [x] opt `--ping-opt`, ping options; default: `"-c1"`.
 
-- [ ] opt `--boot-time`, seconds wait to check network after command; default: `5`.
-- [ ] opt `--check-time`, network check delay in seconds; default: `5`.
+- [x] opt `--boot-time`, seconds wait to check network after command; default: `5`.
+- [x] opt `--check-time`, network check delay in seconds; default: `5`.
 
-- [ ] restart (send SIGINT signal) on network error.
-- [ ] opt `--keep-alive`, run command on init and restart on command exit.
+- [x] restart (send SIGINT signal) on network error.
+- [x] opt `--keep-alive`, run command on init and restart on command exit.
 
-- [ ] opt `-v --verbose`, show log.
-- [ ] opt `-q --quiet`, hide stdout/stderr from subcommand.
+- [x] opt `-v --verbose`, show log.
+- [x] opt `-q --quiet`, hide stdout/stderr from subcommand.
 
 ### v1.1.0
 
