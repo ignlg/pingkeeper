@@ -2,23 +2,15 @@
 
 [![Build Status](https://travis-ci.org/ignlg/pingkeeper.svg?branch=master)](https://travis-ci.org/ignlg/pingkeeper)
 
-Launch a network-related subprocess and monitor network ping to keep it alive
+Launch a network-related command and monitor network with ping. If network fails, kill command and run again. Optionally monitor that the command is permanently running.
+
+## Flow chart
+
+![Flow Chart](assets/Pingkeeper-flowchart.png)
 
 ## Installation
 
-### Download binary
-
 Download release binary from [releases page](https://github.com/ignlg/pingkeeper/releases).
-
-### Build your own
-
-Build with
-
-```
-cargo build --release
-```
-
-You will find your executable at `./target/release/pingkeeper`.
 
 ## Usage
 
@@ -31,7 +23,7 @@ FLAGS:
             Prints help information
 
     -k, --keep-alive
-            Keep command alive?
+            Run command on start and restart it if command dies
 
     -q, --quiet
             Do not output anything from command output, also reduces -v by 1
@@ -44,17 +36,20 @@ FLAGS:
 
 
 OPTIONS:
-        --boot-time <boot-time>
-            Seconds to check network after executing command [default: 5]
-
-        --check-time <check-time>
-            Seconds to check again after network is reachable [default: 5]
-
         --hosts <hosts>
             Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
 
+        --ping-every <n>
+            Check ping again after this amount of seconds from the latest success [default: 5]
+
         --ping-opt <opts>
             Options for ping command [default: -c1]
+
+        --wait-after-exec <seconds>
+            Seconds to check ping after executing command [default: 5]
+
+    -s, --signal <signal>
+            Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc [default: SIGINT]
 
 
 ARGS:
@@ -62,7 +57,14 @@ ARGS:
             Command to run
 ```
 
-## Changelog / Roadmap
+## Changelog
+
+### v2.0.0
+
+- [x] rename opt ~~`--boot-time`~~ -> `--wait-after-exec`.
+- [x] reanme opt ~~`--check-time`~~ -> `--ping-every`.
+- [x] opt `--signal`; default: `"SIGINT"`.
+- [x] flow chart.
 
 ### v1.0.0
 
@@ -81,29 +83,31 @@ ARGS:
 - [x] opt `-v --verbose`, show log.
 - [x] opt `-q --quiet`, hide stdout/stderr from subcommand.
 
-### v1.1.0
-
-- [ ] opt `-s --signal`; default: `"SIGINT"`.
-
-### v2.0.0
+## Backlog
 
 - [ ] opt `--kill-cmd`.
 - [ ] opt `--check-cmd`.
-
-### v3.0.0
 
 - [ ] website.
 - [ ] LaunchDaemon generator.
 - [ ] macOS notifications: connection lost, connection recovered.
 - [ ] opt `--disable-notifications`.
 
-### Backlog
-
 - [ ] detect SIGTERM on subprocess and stop.
 - [ ] write pid to proc.
 - [ ] opt `-f --force` to kill pid and remove pid from proc.
 - [ ] check if interface is up.
 - [ ] write logs to `/var/log`.
+
+## Build
+
+Build with
+
+```
+cargo build --release
+```
+
+You will find your executable at `./target/release/pingkeeper`.
 
 ## License
 
