@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use std::thread::sleep;
+use std::time::Duration;
 use structopt::StructOpt;
 
 mod executor;
@@ -53,15 +55,18 @@ struct Opt {
     /// Options for ping command
     #[structopt(long, name = "opts", default_value = "-c1")]
     ping_opt: String,
-    /// Keep command alive?
+    /// Run command on start and restart it if command dies
     #[structopt(short, long)]
     keep_alive: bool,
-    /// Seconds to check network after executing command
-    #[structopt(long, default_value = "5")]
-    boot_time: usize,
-    /// Seconds to check again after network is reachable
-    #[structopt(long, default_value = "5")]
-    check_time: usize,
+    /// Seconds to check ping after executing command
+    #[structopt(long, name = "seconds", default_value = "5")]
+    wait_after_exec: usize,
+    /// Check ping again after this amount of seconds from the latest success
+    #[structopt(long, name = "n", default_value = "5")]
+    ping_every: usize,
+    /// Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc
+    #[structopt(short, long, default_value = "SIGINT")]
+    signal: String,
     /// Verbose
     #[structopt(short, parse(from_occurrences))]
     verbose: u32,
@@ -89,9 +94,11 @@ fn main() -> Result<(), PingkeeperError> {
     let ping = Ping::new(hosts, opt.ping_opt);
     // executor
     let mut executor = Executor::new(opt.command);
+    // signal
+    executor.set_signal(&opt.signal);
     // wait options to millis
-    let wait_boot_ms = opt.boot_time * 1000;
-    let wait_check_ms = opt.check_time * 1000;
+    let wait_boot_ms = opt.wait_after_exec * 1000;
+    let wait_check_ms = opt.ping_every * 1000;
     // flags and counters
     let mut is_boot = false;
     let mut time_since_last_check: usize = 0;
@@ -139,7 +146,7 @@ fn main() -> Result<(), PingkeeperError> {
             );
             // If previous child, SIGINT
             if let Some(pid) = executor.get_pid() {
-                if executor.interrupt().is_ok() {
+                if executor.kill().is_ok() {
                     logger(LogLevel::INFO, format!("Sent SIGINT to pid {}", pid));
                 } else {
                     logger(
@@ -166,7 +173,7 @@ fn main() -> Result<(), PingkeeperError> {
             // Time to check network again
             time_since_last_check = 0;
         }
-        std::thread::sleep(std::time::Duration::from_millis(CHECK_MS as u64));
+        sleep(Duration::from_millis(CHECK_MS as u64));
         // Add time to timer
         time_since_last_check += CHECK_MS;
     }

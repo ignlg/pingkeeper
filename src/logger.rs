@@ -26,12 +26,12 @@ pub enum LogLevel {
 }
 
 impl From<u32> for LogLevel {
-  fn from(i: u32) -> Self {
-    match i {
-      0 => LogLevel::QUIET,
-      1 => LogLevel::ERROR,
-      2 => LogLevel::WARN,
-      3 => LogLevel::INFO,
+  fn from(number: u32) -> Self {
+    match number {
+      x if x == LogLevel::QUIET as u32 => LogLevel::QUIET,
+      x if x == LogLevel::ERROR as u32 => LogLevel::ERROR,
+      x if x == LogLevel::WARN as u32 => LogLevel::WARN,
+      x if x == LogLevel::INFO as u32 => LogLevel::INFO,
       _ => LogLevel::DEBUG,
     }
   }

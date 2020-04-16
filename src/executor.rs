@@ -16,9 +16,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use nix::sys::signal::{kill, Signal};
+use nix::unistd::Pid;
 use std::fmt;
 use std::io::{self};
 use std::process;
+use std::str::FromStr;
 
 /// Executor errors
 #[derive(Debug, PartialEq, Eq)]
@@ -36,6 +39,7 @@ impl fmt::Display for ExecutorError {
 #[derive(Debug)]
 pub struct Executor {
   command: String,
+  signal: Option<Signal>,
   child: Option<process::Child>,
   error: Option<io::Error>,
 }
@@ -46,6 +50,7 @@ impl Executor {
   pub fn new(command: String) -> Self {
     Self {
       command,
+      signal: Some(Signal::SIGINT),
       child: None,
       error: None,
     }
@@ -72,15 +77,10 @@ impl Executor {
       }
     }
   }
-  /// Send SIGINT to child process, if any
-  pub fn interrupt(&mut self) -> Result<(), ExecutorError> {
+  /// Send signal to child process, if any
+  pub fn kill(&mut self) -> Result<(), ExecutorError> {
     if let Some(child) = &mut self.child {
-      if nix::sys::signal::kill(
-        nix::unistd::Pid::from_raw(child.id() as i32),
-        nix::sys::signal::Signal::SIGINT,
-      )
-      .is_err()
-      {
+      if kill(Pid::from_raw(child.id() as i32), self.signal).is_err() {
         return Err(ExecutorError::SignalNotSent);
       }
       child.wait().ok();
@@ -110,5 +110,13 @@ impl Executor {
       }
     }
     None
+  }
+  /// Set signal
+  pub fn set_signal(&mut self, signal: &str) {
+    if let Ok(signal) = Signal::from_str(signal) {
+      self.signal = Some(signal);
+    } else {
+      self.signal = None;
+    };
   }
 }
