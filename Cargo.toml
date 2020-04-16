@@ -1,9 +1,9 @@
 [package]
 name = "pingkeeper"
 description = """
-Launch a network-related subprocess and monitor network ping to keep it alive
+Launch a network-related command and monitor network with ping. If network fails, kill command and run again. Optionally monitor that the command is permanently running.
 """
-version = "1.0.0"
+version = "2.0.0"
 authors = ["Ignacio Lago <ignacio@ignaciolago.com>"]
 edition = "2018"
 readme = "README.md"
@@ -16,8 +16,15 @@ keywords = [
   "openvpn",
   "vpn",
   "network",
-  "monitor",
-  "ping"
+  "monitoring",
+  "ping",
+  "macos",
+  "unix",
+  "unix-shell",
+  "unix-command",
+  "linux",
+  "launch-daemon",
+  "shell",
 ]
 
 [dependencies]
