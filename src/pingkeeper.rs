@@ -18,13 +18,15 @@
 
 use std::thread::sleep;
 use std::time::Duration;
-use structopt::StructOpt;
+
+mod opt;
+pub use opt::Opt;
 
 mod executor;
 use executor::Executor;
 
-mod ping;
-use ping::Ping;
+mod network_monitor;
+use network_monitor::NetworkMonitor;
 
 mod logger;
 use logger::{logger, LogLevel};
@@ -37,47 +39,6 @@ pub enum PingkeeperError {
 
 /// Time between loops
 const CHECK_MS: usize = 100;
-
-// Pingkeeper
-/// Copyright (C) 2020  Ignacio Lago
-///
-/// This program comes with ABSOLUTELY NO WARRANTY.
-/// This is free software, and you are welcome to redistribute it under certain conditions.
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "Pingkeeper")]
-pub struct Opt {
-    /// Command to run
-    #[structopt(name = "COMMAND")]
-    command: String,
-    /// Hosts to ping, order is ignored
-    #[structopt(long, default_value = "8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1")]
-    hosts: String,
-    /// Options for ping command
-    #[structopt(long, name = "opts", default_value = "-c1")]
-    ping_opt: String,
-    /// Run command on start and restart it if command dies
-    #[structopt(short, long)]
-    keep_alive: bool,
-    /// Seconds to check ping after executing command
-    #[structopt(long, name = "seconds", default_value = "5")]
-    wait_after_exec: usize,
-    /// Check ping again after this amount of seconds from the latest success
-    #[structopt(long, name = "n", default_value = "5")]
-    ping_every: usize,
-    /// Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc
-    #[structopt(short, long, default_value = "SIGINT")]
-    signal: String,
-    /// Maximum number of command errors in a row, 0 for infinite
-    #[structopt(short, long, default_value = "0")]
-    max_errors: usize,
-    /// Verbose
-    #[structopt(short, parse(from_occurrences))]
-    verbose: u32,
-    /// Do not output anything from command output, also reduces -v by 1
-    #[structopt(short, long)]
-    quiet: bool,
-}
 
 pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     // logger
@@ -98,15 +59,17 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     if hosts.is_empty() {
         return Err(PingkeeperError::NoHostsToPing);
     }
-    // ping
-    let ping = Ping::new(hosts, opt.ping_opt);
+    // network monitor
+    let mut network = NetworkMonitor::new(hosts);
+    network.set_port(opt.port);
+    network.set_ping_opt(opt.ping_opt);
     // executor
     let mut executor = Executor::new(opt.command);
     // signal
     executor.set_signal(&opt.signal);
     // wait options to millis
     let wait_boot_ms = opt.wait_after_exec * 1000;
-    let wait_check_ms = opt.ping_every * 1000;
+    let wait_check_ms = opt.network_every * 1000;
     // flags and counters
     let mut is_boot = false;
     let mut time_since_last_check: usize = 0;
@@ -126,7 +89,9 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
                         should_spawn = false;
                     } else {
                         is_boot = false;
-                        if ping.is_network_reachable().is_ok() {
+                        if (!opt.use_ping && network.is_network_reachable().is_ok())
+                            || (opt.use_ping && network.is_ping_pong().is_ok())
+                        {
                             // Network is working
                             logger(LogLevel::DEBUG, String::from("Network reachable"));
                             should_spawn = false;
@@ -211,19 +176,19 @@ mod tests {
             command: String::from("echo"),
             hosts: String::new(),
             keep_alive: false,
-            ping_every: 5,
+            max_errors: 0,
+            network_every: 5,
             ping_opt: String::from("-c1"),
+            port: 53,
             quiet: true,
             signal: String::from("SIGINT"),
+            use_ping: false,
             verbose: 0,
             wait_after_exec: 5,
-            max_errors: 0,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());
-        if let Err(error) = error {
-            assert_eq!(error, PingkeeperError::NoHostsToPing);
-        }
+        assert_eq!(error.unwrap_err(), PingkeeperError::NoHostsToPing);
     }
     #[test]
     fn max_errors() {
@@ -231,18 +196,18 @@ mod tests {
             command: String::from("__pingkeeper__test__command__"),
             hosts: String::from("0.0.0.0"),
             keep_alive: true,
-            ping_every: 5,
+            max_errors: 2,
+            network_every: 5,
             ping_opt: String::from("-c1"),
+            port: 53,
             quiet: true,
             signal: String::from("SIGINT"),
+            use_ping: false,
             verbose: 0,
             wait_after_exec: 1,
-            max_errors: 2,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());
-        if let Err(error) = error {
-            assert_eq!(error, PingkeeperError::TooManyErrors);
-        }
+        assert_eq!(error.unwrap_err(), PingkeeperError::TooManyErrors);
     }
 }

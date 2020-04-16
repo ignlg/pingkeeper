@@ -28,6 +28,9 @@ FLAGS:
     -q, --quiet
             Do not output anything from command output, also reduces -v by 1
 
+        --use-ping
+            Use ping command
+
     -V, --version
             Prints version information
 
@@ -42,11 +45,14 @@ OPTIONS:
     -m, --max-errors <max-errors>
             Maximum number of command errors in a row, 0 for infinite [default: 0]
 
-        --ping-every <n>
-            Check ping again after this amount of seconds from the latest success [default: 5]
+        --network-every <n>
+            Check network again after this amount of seconds from the latest success [default: 5]
 
         --ping-opt <opts>
             Options for ping command [default: -c1]
+
+        --port <port>
+            Port to connect on every host, only valid without --use-ping [default: 53]
 
         --wait-after-exec <seconds>
             Seconds to check ping after executing command [default: 5]
@@ -64,9 +70,9 @@ ARGS:
 
 ### v3.0.0
 
-- [ ] detect network connection directly.
+- [x] detect network connection directly.
+- [x] opt `--use-ping`, use system ping instead of direct connection.
 - [ ] opt `-t --timeout`, seconds waiting for network connection.
-- [ ] use ping as fallback.
 - [x] opt `--max-errors`, number of keep-alive errors allowed in a row to keep running.
 
 ### v2.0.0
