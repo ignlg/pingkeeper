@@ -89,7 +89,7 @@ mod tests {
   }
   #[test]
   fn network_unreachable() {
-    let hosts = vec![String::from("0.0.0.0")];
+    let hosts = vec![String::from("256.0.0.0")];
     let ping_opt = String::from("-c1");
     let ping = Ping::new(hosts, ping_opt);
     assert!(ping.is_network_reachable().is_err());
@@ -97,6 +97,6 @@ mod tests {
   #[test]
   fn ping_function() {
     assert!(ping("-c1", "127.0.0.1"));
-    assert!(!ping("-c1", "0.0.0.0"));
+    assert!(!ping("-c1", "256.0.0.0"));
   }
 }
