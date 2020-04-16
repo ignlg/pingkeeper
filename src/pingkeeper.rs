@@ -29,9 +29,10 @@ use ping::Ping;
 mod logger;
 use logger::{logger, LogLevel};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum PingkeeperError {
     NoHostsToPing,
+    TooManyErrors,
 }
 
 /// Time between loops
@@ -67,6 +68,9 @@ pub struct Opt {
     /// Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc
     #[structopt(short, long, default_value = "SIGINT")]
     signal: String,
+    /// Maximum number of command errors in a row, 0 for infinite
+    #[structopt(short, long, default_value = "0")]
+    max_errors: usize,
     /// Verbose
     #[structopt(short, parse(from_occurrences))]
     verbose: u32,
@@ -106,11 +110,15 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     // flags and counters
     let mut is_boot = false;
     let mut time_since_last_check: usize = 0;
+    let mut errors_in_a_row: usize = 0;
     loop {
         let should_spawn;
         match executor.is_alive() {
             Ok(is_alive) => {
                 if is_alive || !opt.keep_alive {
+                    if opt.max_errors > 0 {
+                        errors_in_a_row = 0;
+                    }
                     // Do nothing if too early after boot or after check
                     if (is_boot && time_since_last_check < wait_boot_ms)
                         || (!is_boot && time_since_last_check < wait_check_ms)
@@ -131,13 +139,23 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
                     }
                 } else {
                     logger(LogLevel::WARN, String::from("Child process is dead"));
+                    if opt.max_errors > 0 {
+                        errors_in_a_row += 1;
+                    }
                     should_spawn = true;
                 }
             }
             Err(err) => {
+                if opt.max_errors > 0 {
+                    errors_in_a_row += 1;
+                }
                 logger(LogLevel::ERROR, format!("Command error -> {}", err));
                 should_spawn = true;
             }
+        }
+
+        if opt.max_errors > 0 && errors_in_a_row > opt.max_errors {
+            return Err(PingkeeperError::TooManyErrors);
         }
 
         // Check process launch
@@ -199,7 +217,32 @@ mod tests {
             signal: String::from("SIGINT"),
             verbose: 0,
             wait_after_exec: 5,
+            max_errors: 0,
         };
-        assert!(pingkeeper(opt).is_err());
+        let error = pingkeeper(opt);
+        assert!(error.is_err());
+        if let Err(error) = error {
+            assert_eq!(error, PingkeeperError::NoHostsToPing);
+        }
+    }
+    #[test]
+    fn max_errors() {
+        let opt = Opt {
+            command: String::from("__pingkeeper__test__command__"),
+            hosts: String::from("0.0.0.0"),
+            keep_alive: true,
+            ping_every: 5,
+            ping_opt: String::from("-c1"),
+            quiet: true,
+            signal: String::from("SIGINT"),
+            verbose: 0,
+            wait_after_exec: 1,
+            max_errors: 2,
+        };
+        let error = pingkeeper(opt);
+        assert!(error.is_err());
+        if let Err(error) = error {
+            assert_eq!(error, PingkeeperError::TooManyErrors);
+        }
     }
 }

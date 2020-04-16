@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ignlg/pingkeeper.svg?branch=master)](https://travis-ci.org/ignlg/pingkeeper)
 
-Launch a network-related command and monitor network with ping. If network fails, kill command and run again. Optionally monitor that the command is permanently running.
+Launch a network-related command and monitor network with ping. On network failure, kill and run it again. Optionally monitor that the command is permanently running.
 
 ## Flow chart
 
@@ -39,6 +39,9 @@ OPTIONS:
         --hosts <hosts>
             Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
 
+    -m, --max-errors <max-errors>
+            Maximum number of command errors in a row, 0 for infinite [default: 0]
+
         --ping-every <n>
             Check ping again after this amount of seconds from the latest success [default: 5]
 
@@ -59,6 +62,13 @@ ARGS:
 
 ## Changelog
 
+### v3.0.0
+
+- [ ] detect network connection directly.
+- [ ] opt `-t --timeout`, seconds waiting for network connection.
+- [ ] use ping as fallback.
+- [x] opt `--max-errors`, number of keep-alive errors allowed in a row to keep running.
+
 ### v2.0.0
 
 - [x] rename opt ~~`--boot-time`~~ -> `--wait-after-exec`.
@@ -71,28 +81,20 @@ ARGS:
 ### v1.0.0
 
 - [x] launch command when ping fails.
-
 - [x] opt `--hosts`; default: `"8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1"`.
 - [x] detect if network is reachable.
 - [x] opt `--ping-opt`, ping options; default: `"-c1"`.
-
 - [x] opt `--boot-time`, seconds wait to check network after command; default: `5`.
 - [x] opt `--check-time`, network check delay in seconds; default: `5`.
-
 - [x] restart (send SIGINT signal) on network error.
 - [x] opt `--keep-alive`, run command on init and restart on command exit.
-
 - [x] opt `-v --verbose`, show log.
 - [x] opt `-q --quiet`, hide stdout/stderr from subcommand.
 
 ## Backlog
 
-- [ ] detect network connection directly.
-- [ ] opt `-t --timeout`, seconds waiting for network connection.
-- [ ] use ping as fallback.
-
-- [ ] opt `--kill-cmd`.
-- [ ] opt `--check-cmd`.
+- [ ] opt `--kill-cmd`, custom kill command.
+- [ ] opt `--check-cmd`, custom check network command.
 
 - [ ] pingkeeper tests with mocks.
 - [ ] website.
