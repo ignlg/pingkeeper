@@ -120,3 +120,70 @@ impl Executor {
     };
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::thread::sleep;
+  use std::time::Duration;
+
+  #[test]
+  fn new() {
+    let _executor = Executor::new(String::from("echo"));
+  }
+  #[test]
+  fn execute() {
+    let mut executor = Executor::new(String::from("echo"));
+    assert!(executor.execute(true));
+  }
+  #[test]
+  fn is_alive() {
+    // A command that never ends
+    let mut executor = Executor::new(String::from("cat"));
+    assert!(executor.execute(true));
+    assert!(executor.is_alive().is_ok());
+    assert!(executor.is_alive().unwrap());
+    // A command that ends
+    let mut executor = Executor::new(String::from("echo"));
+    assert!(executor.execute(true));
+    sleep(Duration::from_millis(10));
+    assert!(executor.is_alive().is_ok());
+    assert!(!executor.is_alive().unwrap());
+    // A command killed
+    let mut executor = Executor::new(String::from("echo"));
+    assert!(executor.execute(true));
+    assert!(executor.kill().is_ok());
+    assert!(executor.is_alive().is_ok());
+    assert!(!executor.is_alive().unwrap());
+  }
+  #[test]
+  fn kill() {
+    // A command that never ends
+    let mut executor = Executor::new(String::from("cat"));
+    assert!(executor.execute(true));
+    assert!(executor.is_alive().is_ok());
+    assert!(executor.is_alive().unwrap());
+    assert!(executor.kill().is_ok());
+    assert!(!executor.is_alive().unwrap());
+  }
+  #[test]
+  fn get_pid() {
+    // A command that never ends
+    let mut executor = Executor::new(String::from("cat"));
+    assert!(executor.execute(true));
+    assert!(executor.get_pid().is_some());
+    // A command that ends
+    let mut executor = Executor::new(String::from("echo"));
+    assert!(executor.execute(true));
+    assert!(executor.get_pid().is_some());
+    // A command that does not exist
+    let mut executor = Executor::new(String::from("__pingkeep__test__command__"));
+    assert!(executor.execute(true));
+    assert!(executor.get_pid().is_some());
+  }
+  #[test]
+  fn set_signal() {
+    let mut executor = Executor::new(String::from("echo"));
+    executor.set_signal("SIGTERM");
+  }
+}

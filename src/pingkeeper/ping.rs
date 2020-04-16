@@ -69,3 +69,34 @@ impl Ping {
     Err(PingError::NetworkUnreachable)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn new() {
+    let hosts = vec![String::from("8.8.8.8")];
+    let ping_opt = String::from("-c1");
+    let _ping = Ping::new(hosts, ping_opt);
+  }
+  #[test]
+  fn network_reachable() {
+    let hosts = vec![String::from("127.0.0.1")];
+    let ping_opt = String::from("-c1");
+    let ping = Ping::new(hosts, ping_opt);
+    assert!(ping.is_network_reachable().is_ok());
+  }
+  #[test]
+  fn network_unreachable() {
+    let hosts = vec![String::from("0.0.0.0")];
+    let ping_opt = String::from("-c1");
+    let ping = Ping::new(hosts, ping_opt);
+    assert!(ping.is_network_reachable().is_err());
+  }
+  #[test]
+  fn ping_function() {
+    assert!(ping("-c1", "127.0.0.1"));
+    assert!(!ping("-c1", "0.0.0.0"));
+  }
+}
