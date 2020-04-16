@@ -36,11 +36,14 @@ pub struct Opt {
     /// Port to connect on every host, only valid without --use-ping
     #[structopt(long, default_value = "53")]
     pub port: u32,
+    /// Timeout in seconds, only valid without --use-ping
+    #[structopt(short, long, default_value = "2")]
+    pub timeout: u32,
 
     /// Use ping command
     #[structopt(long)]
     pub use_ping: bool,
-    /// Options for ping command
+    /// Options for ping command, only valid with --use-ping
     #[structopt(long, name = "opts", default_value = "-c1")]
     pub ping_opt: String,
 
@@ -62,7 +65,7 @@ pub struct Opt {
     #[structopt(short, long, default_value = "0")]
     pub max_errors: usize,
 
-    /// Verbose
+    /// Verbose, -v -vv -vvv
     #[structopt(short, parse(from_occurrences))]
     pub verbose: u32,
     /// Do not output anything from command output, also reduces -v by 1

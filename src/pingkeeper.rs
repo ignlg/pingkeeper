@@ -35,6 +35,7 @@ use logger::{logger, LogLevel};
 pub enum PingkeeperError {
     NoHostsToPing,
     TooManyErrors,
+    InvalidTimeout,
 }
 
 /// Time between loops
@@ -63,6 +64,9 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     let mut network = NetworkMonitor::new(hosts);
     network.set_port(opt.port);
     network.set_ping_opt(opt.ping_opt);
+    if network.set_timeout(opt.timeout as u64).is_err() {
+        return Err(PingkeeperError::InvalidTimeout);
+    }
     // executor
     let mut executor = Executor::new(opt.command);
     // signal
@@ -185,6 +189,7 @@ mod tests {
             use_ping: false,
             verbose: 0,
             wait_after_exec: 5,
+            timeout: 2,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());
@@ -205,6 +210,7 @@ mod tests {
             use_ping: false,
             verbose: 0,
             wait_after_exec: 1,
+            timeout: 2,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());

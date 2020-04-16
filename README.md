@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/ignlg/pingkeeper.svg?branch=master)](https://travis-ci.org/ignlg/pingkeeper)
 
-Launch a network-related command and monitor network with ping. On network failure, kill and run it again. Optionally monitor that the command is permanently running.
+Command line application that monitors network (direct connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
+
+Proudly made from Barcelona with Rust 🦀.
 
 ## Flow chart
 
@@ -35,7 +37,7 @@ FLAGS:
             Prints version information
 
     -v
-            Verbose
+            Verbose, -v -vv -vvv
 
 
 OPTIONS:
@@ -49,7 +51,7 @@ OPTIONS:
             Check network again after this amount of seconds from the latest success [default: 5]
 
         --ping-opt <opts>
-            Options for ping command [default: -c1]
+            Options for ping command, only valid with --use-ping [default: -c1]
 
         --port <port>
             Port to connect on every host, only valid without --use-ping [default: 53]
@@ -59,6 +61,9 @@ OPTIONS:
 
     -s, --signal <signal>
             Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc [default: SIGINT]
+
+    -t, --timeout <timeout>
+            Timeout in seconds, only valid without --use-ping [default: 2]
 
 
 ARGS:
@@ -72,7 +77,7 @@ ARGS:
 
 - [x] detect network connection directly.
 - [x] opt `--use-ping`, use system ping instead of direct connection.
-- [ ] opt `-t --timeout`, seconds waiting for network connection.
+- [x] opt `-t --timeout`, seconds waiting for network connection.
 - [x] opt `--max-errors`, number of keep-alive errors allowed in a row to keep running.
 
 ### v2.0.0

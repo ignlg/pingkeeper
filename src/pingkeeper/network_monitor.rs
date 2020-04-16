@@ -23,17 +23,15 @@ use std::process;
 use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
+const DEFAULT_TIMEOUT: u64 = 2;
+
 /// Ping errors
 #[derive(Debug, PartialEq, Eq)]
 pub enum NetworkError {
   NetworkUnreachable,
   NoHostsToCheck,
   NoPort,
-}
-
-/// Connect to an address
-fn connect(addr: &SocketAddr, timeout: Duration) -> bool {
-  TcpStream::connect_timeout(addr, timeout).is_ok()
+  InvalidTimeout,
 }
 
 /// Ping a host and return if it is reachable
@@ -48,14 +46,14 @@ fn ping(ping_opt: &str, host: &str) -> bool {
 }
 
 /// Check if it can connect to at least one addresses
-fn can_connect_some(addresses: Vec<SocketAddr>) -> bool {
-  if connect(&addresses[0], Duration::from_secs(5)) {
+fn can_connect_some(addresses: Vec<SocketAddr>, timeout: Duration) -> bool {
+  if TcpStream::connect_timeout(&addresses[0], timeout).is_ok() {
     return true;
   }
   let n = addresses.len();
   for result in addresses
     .with_threads(n)
-    .map(move |addr| connect(&addr, Duration::from_secs(5)))
+    .map(move |addr| TcpStream::connect_timeout(&addr, timeout).is_ok())
   {
     if result {
       return true;
@@ -69,6 +67,7 @@ pub struct NetworkMonitor {
   hosts: Vec<String>,
   port: Option<u32>,
   ping_opt: Option<String>,
+  timeout: Duration,
 }
 
 // Public
@@ -78,6 +77,7 @@ impl NetworkMonitor {
       hosts,
       port: None,
       ping_opt: None,
+      timeout: Duration::from_secs(DEFAULT_TIMEOUT),
     }
   }
   /// Check if ping has pong
@@ -117,7 +117,7 @@ impl NetworkMonitor {
     }
     let mut rng = thread_rng();
     addresses.shuffle(&mut rng);
-    if can_connect_some(addresses) {
+    if can_connect_some(addresses, self.timeout) {
       Ok(())
     } else {
       Err(NetworkError::NetworkUnreachable)
@@ -131,6 +131,15 @@ impl NetworkMonitor {
   /// Set ping options, for is_ping_pong
   pub fn set_ping_opt(&mut self, ping_opt: String) {
     self.ping_opt = Some(ping_opt);
+  }
+  /// Set timeout
+  pub fn set_timeout(&mut self, secs: u64) -> Result<(), NetworkError> {
+    if secs > 0 {
+      self.timeout = Duration::from_secs(secs);
+      Ok(())
+    } else {
+      Err(NetworkError::InvalidTimeout)
+    }
   }
 }
 
@@ -160,6 +169,13 @@ mod tests {
   fn new() {
     let hosts = vec![String::from("8.8.8.8")];
     let _ping = NetworkMonitor::new(hosts);
+  }
+  #[test]
+  fn set_timeout() {
+    let hosts = vec![String::from("8.8.8.8")];
+    let mut network = NetworkMonitor::new(hosts);
+    assert!(network.set_timeout(0).is_err());
+    assert!(network.set_timeout(2).is_ok());
   }
   // Ping
   #[test]
@@ -191,6 +207,7 @@ mod tests {
   }
   #[test]
   fn is_network_reachable() {
+    // Requires internet connection
     let hosts = vec![String::from("1.0.0.1")];
     let mut network = NetworkMonitor::new(hosts);
     network.set_port(53);
