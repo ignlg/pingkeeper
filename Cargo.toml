@@ -1,9 +1,9 @@
 [package]
 name = "pingkeeper"
 description = """
-Launch a network-related command and monitor network with ping. If network fails, kill command and run again. Optionally monitor that the command is permanently running.
+Command line application that monitors network (direct connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
 """
-version = "2.0.0"
+version = "3.0.0"
 authors = ["Ignacio Lago <ignacio@ignaciolago.com>"]
 edition = "2018"
 readme = "README.md"
