@@ -65,6 +65,8 @@ ARGS:
 - [x] reanme opt ~~`--check-time`~~ -> `--ping-every`.
 - [x] opt `--signal`; default: `"SIGINT"`.
 - [x] flow chart.
+- [x] move logic to subfiles.
+- [x] tests.
 
 ### v1.0.0
 
@@ -85,9 +87,14 @@ ARGS:
 
 ## Backlog
 
+- [ ] detect network connection directly.
+- [ ] opt `-t --timeout`, seconds waiting for network connection.
+- [ ] use ping as fallback.
+
 - [ ] opt `--kill-cmd`.
 - [ ] opt `--check-cmd`.
 
+- [ ] pingkeeper tests with mocks.
 - [ ] website.
 - [ ] LaunchDaemon generator.
 - [ ] macOS notifications: connection lost, connection recovered.
