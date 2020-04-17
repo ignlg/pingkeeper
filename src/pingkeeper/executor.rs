@@ -46,7 +46,7 @@ pub struct Executor {
 
 // Public impl
 impl Executor {
-  /// Create a new Executor instance
+  /// Creates a new Executor instance
   pub fn new(command: String) -> Self {
     Self {
       command,
@@ -55,7 +55,7 @@ impl Executor {
       error: None,
     }
   }
-  /// Spawn a child process
+  /// Spawns a child process
   pub fn execute(&mut self, quiet: bool) -> bool {
     let mut cmd = process::Command::new("/bin/sh");
     cmd.arg("-c").arg(&self.command);
@@ -77,7 +77,7 @@ impl Executor {
       }
     }
   }
-  /// Send signal to child process, if any
+  /// Sends kill signal to child process, if any
   pub fn kill(&mut self) -> Result<(), ExecutorError> {
     if let Some(child) = &mut self.child {
       if kill(Pid::from_raw(child.id() as i32), self.signal).is_err() {
@@ -100,7 +100,7 @@ impl Executor {
     }
     Ok(false)
   }
-  /// Get child process PID, if any
+  /// Gets child process PID, if any
   pub fn get_pid(&mut self) -> Option<u32> {
     if let Ok(is_alive) = self.is_alive() {
       if is_alive {
@@ -111,7 +111,7 @@ impl Executor {
     }
     None
   }
-  /// Set signal
+  /// Sets kill signal
   pub fn set_signal(&mut self, signal: &str) {
     if let Ok(signal) = Signal::from_str(signal) {
       self.signal = Some(signal);

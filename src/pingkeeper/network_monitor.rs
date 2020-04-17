@@ -25,7 +25,7 @@ use std::time::Duration;
 
 const DEFAULT_TIMEOUT: u64 = 2;
 
-/// Ping errors
+/// Network monitor errors
 #[derive(Debug, PartialEq, Eq)]
 pub enum NetworkError {
   NetworkUnreachable,
@@ -34,7 +34,7 @@ pub enum NetworkError {
   InvalidTimeout,
 }
 
-/// Ping a host and return if it is reachable
+/// Pings a host and returns if it is reachable
 fn ping(ping_opt: &str, host: &str) -> bool {
   process::Command::new("/bin/sh")
     .arg("-c")
@@ -45,7 +45,21 @@ fn ping(ping_opt: &str, host: &str) -> bool {
     .success()
 }
 
-/// Check if it can connect to at least one addresses
+/// Checks if a ping replies from one host at least
+fn can_ping_some(hosts: Vec<String>, ping_opt: String) -> bool {
+  if ping(&ping_opt, &hosts[0]) {
+    return true;
+  }
+  let n = hosts.len();
+  for result in hosts.with_threads(n).map(move |s| ping(&ping_opt, &s)) {
+    if result {
+      return true;
+    }
+  }
+  false
+}
+
+/// Checks if a connect can be stablished to one address at least
 fn can_connect_some(addresses: Vec<SocketAddr>, timeout: Duration) -> bool {
   if TcpStream::connect_timeout(&addresses[0], timeout).is_ok() {
     return true;
@@ -62,7 +76,7 @@ fn can_connect_some(addresses: Vec<SocketAddr>, timeout: Duration) -> bool {
   false
 }
 
-/// Ping
+/// Network monitor
 pub struct NetworkMonitor {
   hosts: Vec<String>,
   port: Option<u32>,
@@ -72,6 +86,7 @@ pub struct NetworkMonitor {
 
 // Public
 impl NetworkMonitor {
+  /// Instantiates a new NetworkMonitor
   pub fn new(hosts: Vec<String>) -> Self {
     NetworkMonitor {
       hosts,
@@ -80,7 +95,7 @@ impl NetworkMonitor {
       timeout: Duration::from_secs(DEFAULT_TIMEOUT),
     }
   }
-  /// Check if ping has pong
+  /// Checks if ping answers with a pong
   pub fn is_ping_pong(&self) -> Result<(), NetworkError> {
     if self.hosts.is_empty() {
       return Err(NetworkError::NoHostsToCheck);
@@ -92,18 +107,13 @@ impl NetworkMonitor {
     if let Some(opt) = &self.ping_opt {
       ping_opt = String::from(opt)
     };
-    if ping(&ping_opt, &hosts[0]) {
-      return Ok(());
+    if can_ping_some(hosts, ping_opt) {
+      Ok(())
+    } else {
+      Err(NetworkError::NetworkUnreachable)
     }
-    let n = self.hosts.len();
-    for result in hosts.with_threads(n).map(move |s| ping(&ping_opt, &s)) {
-      if result {
-        return Ok(());
-      }
-    }
-    Err(NetworkError::NetworkUnreachable)
   }
-  /// Check if network is reachable
+  /// Checks if network is reachable
   pub fn is_network_reachable(&self) -> Result<(), NetworkError> {
     if self.hosts.is_empty() {
       return Err(NetworkError::NoHostsToCheck);
@@ -124,15 +134,15 @@ impl NetworkMonitor {
     }
   }
 
-  /// Set port, for is_network_reachable
+  /// Sets port, for is_network_reachable
   pub fn set_port(&mut self, port: u32) {
     self.port = Some(port);
   }
-  /// Set ping options, for is_ping_pong
+  /// Sets ping options, for is_ping_pong
   pub fn set_ping_opt(&mut self, ping_opt: String) {
     self.ping_opt = Some(ping_opt);
   }
-  /// Set timeout
+  /// Sets timeout for direct connection
   pub fn set_timeout(&mut self, secs: u64) -> Result<(), NetworkError> {
     if secs > 0 {
       self.timeout = Duration::from_secs(secs);
@@ -145,14 +155,13 @@ impl NetworkMonitor {
 
 // Private
 impl NetworkMonitor {
-  /// Get hosts as network addresses
+  /// Gets hosts as network addresses
   fn get_addresses(&self, port: u32) -> Vec<SocketAddr> {
     self
       .hosts
       .iter()
       .map(|addr| {
         let ip_port = format!("{}:{}", addr, port);
-        print!("{}", ip_port);
         ip_port.parse::<SocketAddr>()
       })
       .filter(|addr| addr.is_ok())

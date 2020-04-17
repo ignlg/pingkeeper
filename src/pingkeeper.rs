@@ -31,6 +31,7 @@ use network_monitor::NetworkMonitor;
 mod logger;
 use logger::{logger, LogLevel};
 
+/// Pingkeeper errors
 #[derive(Debug, Eq, PartialEq)]
 pub enum PingkeeperError {
     NoHostsToPing,
@@ -41,6 +42,7 @@ pub enum PingkeeperError {
 /// Time between loops
 const CHECK_MS: usize = 100;
 
+/// Monitorises that network is reachable and, in case of failure, runs a command
 pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     // logger
     let logger = if !opt.quiet {

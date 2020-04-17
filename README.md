@@ -1,8 +1,10 @@
 # pingkeeper
 
 [![Build Status](https://travis-ci.org/ignlg/pingkeeper.svg?branch=master)](https://travis-ci.org/ignlg/pingkeeper)
+[![Latest version](https://img.shields.io/crates/v/online.svg)](https://crates.io/crates/online)
+![Stability stable](https://img.shields.io/badge/stability-stable-green.svg)
 
-Command line application that monitors network (direct connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
+Command line application that monitorises that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
 
 Proudly made from Barcelona with Rust 🦀.
 
@@ -79,6 +81,7 @@ ARGS:
 - [x] opt `--use-ping`, use system ping instead of direct connection.
 - [x] opt `-t --timeout`, seconds waiting for network connection.
 - [x] opt `--max-errors`, number of keep-alive errors allowed in a row to keep running.
+- [x] improve documentation.
 
 ### v2.0.0
 
@@ -104,15 +107,15 @@ ARGS:
 
 ## Backlog
 
+- [ ] improve documentation.
+- [ ] export lib too.
 - [ ] opt `--kill-cmd`, custom kill command.
 - [ ] opt `--check-cmd`, custom check network command.
-
 - [ ] pingkeeper tests with mocks.
 - [ ] website.
 - [ ] LaunchDaemon generator.
 - [ ] macOS notifications: connection lost, connection recovered.
 - [ ] opt `--disable-notifications`.
-
 - [ ] detect SIGTERM on subprocess and stop.
 - [ ] write pid to proc.
 - [ ] opt `-f --force` to kill pid and remove pid from proc.

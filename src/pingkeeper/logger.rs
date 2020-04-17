@@ -16,6 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/// Verbosity levels
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub enum LogLevel {
   QUIET = 0,
@@ -37,7 +38,7 @@ impl From<u32> for LogLevel {
   }
 }
 
-/// Filter and write output to stdout/stderr
+/// Returns a logger function that writes message to stdout/stderr if verbosity level allows it
 pub fn logger(verbose: LogLevel) -> impl Fn(LogLevel, String) -> () {
   move |level: LogLevel, message: String| match (level, verbose) {
     (LogLevel::ERROR, v) if v >= LogLevel::ERROR => eprintln!("PK error: {}", message),
