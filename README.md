@@ -157,6 +157,11 @@ Help available running `pingkeeper --help`:
 
 ## Changelog
 
+### v3.0.2
+
+- [x] improve documentation.
+- [x] improve tests.
+
 ### v3.0.1
 
 - [x] improve documentation.
