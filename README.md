@@ -71,7 +71,7 @@ This requires the stable version of `rust` & `cargo` installed. Visit [Rust webs
 - Keep your vpn connection alive using [Hummingbird][hummingbird-link] without any logging:
 
   ```shell
-  sudo pingkeeper --keep-alive --quite "hummingbird denmark.ovpn"
+  sudo pingkeeper --keep-alive --quiet "hummingbird denmark.ovpn"
   ```
 
 - Send an email to your boss when your network is down, using ping as test:
