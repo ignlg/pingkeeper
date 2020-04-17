@@ -1,8 +1,12 @@
 # pingkeeper
 
-[![Build Status](https://travis-ci.org/ignlg/pingkeeper.svg?branch=master)](https://travis-ci.org/ignlg/pingkeeper)
-[![Latest version](https://img.shields.io/crates/v/online.svg)](https://crates.io/crates/online)
-![Stability stable](https://img.shields.io/badge/stability-stable-green.svg)
+[![Crate][crate-image]][crate-link]
+[![GPLv3 license][license-image]][license-link]
+![MSRV][rustc-image]
+[![Safety Dance][safety-image]][safety-link]
+[![Build Status][build-image]][build-link]
+[![Release Date][releases-image]][releases-link]
+![Stability stable][stability-image]
 
 Command line application that monitorises that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
 
@@ -10,7 +14,7 @@ Proudly made from Barcelona with Rust 🦀.
 
 ## How does it work?
 
-![Flow Chart](assets/Pingkeeper-flowchart.png)
+![Flow Chart][flowchart-image]
 
 ## Installation
 
@@ -24,7 +28,7 @@ Three options:
 
 ### Manual download
 
-1.  Download release binaries from [releases page](https://github.com/ignlg/pingkeeper/releases).
+1.  Download release binaries from [releases page][releases-link].
 
 1.  _recommended_ Check the integrity of the downloaded file:
 
@@ -46,7 +50,7 @@ Three options:
 
 ### Build it yourself
 
-This requires the stable version of `rust` & `cargo` installed. Visit [Rust website](https://www.rust-lang.org/) for more information.
+This requires the stable version of `rust` & `cargo` installed. Visit [Rust website][rust-link] for more information.
 
 1.  Run this command:
 
@@ -58,19 +62,45 @@ This requires the stable version of `rust` & `cargo` installed. Visit [Rust webs
 
 ### Usage examples
 
-- Keep your connection alive using OpenVPN:
+- Keep your vpn connection alive using OpenVPN:
 
-        sudo pingkeeper -k "openvpn /home/user/vpn_configuration.ovpn"
+  ```shell
+  sudo pingkeeper -k "openvpn /home/user/vpn_configuration.ovpn"
+  ```
 
-* Keep your connection alive using Hummingbird without any logging:
+- Keep your vpn connection alive using [Hummingbird][hummingbird-link] without any logging:
 
-        sudo pingkeeper --keep-alive --quite "hummingbird /home/user/vpn_configuration.ovpn"
+  ```shell
+  sudo pingkeeper --keep-alive --quite "hummingbird denmark.ovpn"
+  ```
 
-* Send an email to your boss when your network is down, using ping as test:
+- Send an email to your boss when your network is down, using ping as test:
 
-        pingkeeper --use-ping "mail -s \"Sorry, my network is down. I will be right back asap.\" myboss@example.com < /dev/null"
+  ```shell
+  pingkeeper --use-ping "mail -s \"Sorry, my network is down. I will be right back asap.\" myboss@example.com < /dev/null"
+  ```
+
+- Send yourself a [pushbullet-cli][pushbullet-cli-link] message when your home server seems down, using ping as test:
+
+  ```shell
+  pingkeeper --hosts "192.168.1.50" --use-ping "pb push \"Is home server down?\""
+  ```
+
+- Tweet when your [opentracker][opentracker-link] bittorrent tracker server seems down, using [t][t-link]:
+
+  ```shell
+  pingkeeper --hosts "10.1.1.28" --port 6969 "t update \"Dear users, the tracker is currently down :(\""
+  ```
+
+- Run your own script when the damn wifi seems down again:
+
+  ```shell
+  pingkeeper "/home/user/try_reset_router.sh"
+  ```
 
 ### Usage manual
+
+Help available running `pingkeeper --help`:
 
         USAGE:
         pingkeeper [FLAGS] [OPTIONS] <COMMAND>
@@ -192,3 +222,26 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+[//]: # "assets"
+[flowchart-image]: assets/Pingkeeper-flowchart.png
+[//]: # "badges"
+[crate-image]: https://img.shields.io/crates/v/pingkeeper
+[downloads-image]: https://img.shields.io/crates/d/pingkeeper
+[crate-link]: https://crates.io/crates/pingkeeper
+[license-image]: https://img.shields.io/crates/l/pingkeeper
+[license-link]: https://github.com/ignlg/pingkeeper/blob/next/LICENSE.md
+[rustc-image]: https://img.shields.io/badge/rustc-1.36+-blue.svg
+[safety-image]: https://img.shields.io/badge/unsafe-forbidden-success
+[safety-link]: https://github.com/rust-secure-code/safety-dance/
+[build-image]: https://travis-ci.org/ignlg/pingkeeper.svg?branch=master
+[build-link]: https://travis-ci.org/ignlg/pingkeeper
+[releases-image]: https://img.shields.io/github/release-date/ignlg/pingkeeper
+[releases-link]: https://github.com/ignlg/pingkeeper/releases
+[stability-image]: https://img.shields.io/badge/stability-stable-green
+[//]: # "links"
+[rust-link]: https://www.rust-lang.org/
+[hummingbird-link]: https://gitlab.com/AirVPN/hummingbird
+[pushbullet-cli-link]: https://github.com/GustavoKatel/pushbullet-cli
+[opentracker-link]: https://erdgeist.org/arts/software/opentracker/
+[t-link]: https://github.com/sferik/t
