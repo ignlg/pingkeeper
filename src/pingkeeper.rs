@@ -42,7 +42,7 @@ pub enum PingkeeperError {
 /// Time between loops
 const CHECK_MS: usize = 100;
 
-/// Monitorises that network is reachable and, in case of failure, runs a command
+/// Monitorizes that network is reachable and, in case of failure, runs a command
 pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     // logger
     let logger = if !opt.quiet {

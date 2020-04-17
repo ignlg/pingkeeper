@@ -8,7 +8,7 @@
 [![Release Date][releases-image]][releases-link]
 ![Stability stable][stability-image]
 
-Command line application that monitorises that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
+Command line application that monitorizes that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
 
 Proudly made from Barcelona with Rust 🦀.
 
