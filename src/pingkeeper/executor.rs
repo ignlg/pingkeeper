@@ -141,6 +141,7 @@ mod tests {
     // A command that never ends
     let mut executor = Executor::new(String::from("cat"));
     assert!(executor.execute(true));
+    sleep(Duration::from_millis(10));
     assert!(executor.is_alive().is_ok());
     assert!(executor.is_alive().unwrap());
     // A command that ends
@@ -152,6 +153,7 @@ mod tests {
     // A command killed
     let mut executor = Executor::new(String::from("echo"));
     assert!(executor.execute(true));
+    sleep(Duration::from_millis(10));
     assert!(executor.kill().is_ok());
     assert!(executor.is_alive().is_ok());
     assert!(!executor.is_alive().unwrap());
@@ -161,6 +163,7 @@ mod tests {
     // A command that never ends
     let mut executor = Executor::new(String::from("cat"));
     assert!(executor.execute(true));
+    sleep(Duration::from_millis(10));
     assert!(executor.is_alive().is_ok());
     assert!(executor.is_alive().unwrap());
     assert!(executor.kill().is_ok());
