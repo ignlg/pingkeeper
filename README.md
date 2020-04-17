@@ -8,70 +8,122 @@ Command line application that monitorises that network is reachable (direct tcp 
 
 Proudly made from Barcelona with Rust 🦀.
 
-## Flow chart
+## How does it work?
 
 ![Flow Chart](assets/Pingkeeper-flowchart.png)
 
 ## Installation
 
-Download release binary from [releases page](https://github.com/ignlg/pingkeeper/releases).
+Three options:
+
+### Cargo & Go
+
+1.  If you already have `cargo` installed, use:
+
+        cargo install pingkeeper
+
+### Manual download
+
+1.  Download release binaries from [releases page](https://github.com/ignlg/pingkeeper/releases).
+
+1.  _recommended_ Check the integrity of the downloaded file:
+
+        sha512sum --check pingkeeper-macos-v3.0.0.tar.gz.sha512
+
+    It should say: `pingkeeper-macos-v3.0.0.tar.gz: OK`
+
+1.  Extract archive with:
+
+        tar xvf pingkeeper-macos-v3.0.0.tar.gz
+
+1.  _recommended_ Check the integrity of the binary file with:
+
+        sha512sum --check pingkeeper.sha512
+
+    It should say: `pingkeeper: OK`
+
+1.  Copy `pingkeeper` binary file to somewhere within your `$PATH`, ie: `/usr/local/bin`.
+
+### Build it yourself
+
+This requires the stable version of `rust` & `cargo` installed. Visit [Rust website](https://www.rust-lang.org/) for more information.
+
+1.  Run this command:
+
+        cargo build --release
+
+2.  You will find your executable at `./target/release/pingkeeper`.
 
 ## Usage
 
-```
-USAGE:
-    pingkeeper [FLAGS] [OPTIONS] <COMMAND>
+### Usage examples
 
-FLAGS:
-    -h, --help
-            Prints help information
+- Keep your connection alive using OpenVPN:
 
-    -k, --keep-alive
-            Run command on start and restart it if command dies
+        sudo pingkeeper -k "openvpn /home/user/vpn_configuration.ovpn"
 
-    -q, --quiet
-            Do not output anything from command output, also reduces -v by 1
+* Keep your connection alive using Hummingbird without any logging:
 
-        --use-ping
-            Use ping command
+        sudo pingkeeper --keep-alive --quite "hummingbird /home/user/vpn_configuration.ovpn"
 
-    -V, --version
-            Prints version information
+* Send an email to your boss when your network is down, using ping as test:
 
-    -v
-            Verbose, -v -vv -vvv
+        pingkeeper --use-ping "mail -s \"Sorry, my network is down. I will be right back asap.\" myboss@example.com < /dev/null"
 
+### Usage manual
 
-OPTIONS:
-        --hosts <hosts>
-            Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
+        USAGE:
+        pingkeeper [FLAGS] [OPTIONS] <COMMAND>
 
-    -m, --max-errors <max-errors>
-            Maximum number of command errors in a row, 0 for infinite [default: 0]
+        FLAGS:
+        -h, --help
+                Prints help information
 
-        --network-every <n>
-            Check network again after this amount of seconds from the latest success [default: 5]
+        -k, --keep-alive
+                Run command on start and restart it if command dies
 
-        --ping-opt <opts>
-            Options for ping command, only valid with --use-ping [default: -c1]
+        -q, --quiet
+                Do not output anything from command output, also reduces -v by 1
 
-        --port <port>
-            Port to connect on every host, only valid without --use-ping [default: 53]
+                --use-ping
+                Use ping command
 
-        --wait-after-exec <seconds>
-            Seconds to check ping after executing command [default: 5]
+        -V, --version
+                Prints version information
 
-    -s, --signal <signal>
-            Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc [default: SIGINT]
-
-    -t, --timeout <timeout>
-            Timeout in seconds, only valid without --use-ping [default: 2]
+        -v
+                Verbose, -v -vv -vvv
 
 
-ARGS:
-    <COMMAND>
-            Command to run
-```
+        OPTIONS:
+                --hosts <hosts>
+                Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
+
+        -m, --max-errors <max-errors>
+                Maximum number of command errors in a row, 0 for infinite [default: 0]
+
+                --network-every <n>
+                Check network again after this amount of seconds from the latest success [default: 5]
+
+                --ping-opt <opts>
+                Options for ping command, only valid with --use-ping [default: -c1]
+
+                --port <port>
+                Port to connect on every host, only valid without --use-ping [default: 53]
+
+                --wait-after-exec <seconds>
+                Seconds to check ping after executing command [default: 5]
+
+        -s, --signal <signal>
+                Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc [default: SIGINT]
+
+        -t, --timeout <timeout>
+                Timeout in seconds, only valid without --use-ping [default: 2]
+
+
+        ARGS:
+        <COMMAND>
+                Command to run
 
 ## Changelog
 
@@ -107,7 +159,8 @@ ARGS:
 
 ## Backlog
 
-- [ ] improve documentation.
+- [x] add usage examples to docs.
+- [ ] improve generated docs.
 - [ ] export lib too.
 - [ ] opt `--kill-cmd`, custom kill command.
 - [ ] opt `--check-cmd`, custom check network command.
@@ -121,16 +174,6 @@ ARGS:
 - [ ] opt `-f --force` to kill pid and remove pid from proc.
 - [ ] check if interface is up.
 - [ ] write logs to `/var/log`.
-
-## Build
-
-Build with
-
-```
-cargo build --release
-```
-
-You will find your executable at `./target/release/pingkeeper`.
 
 ## License
 
