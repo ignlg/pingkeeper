@@ -10,22 +10,7 @@ readme = "README.md"
 license = "GPL-3.0-or-later"
 homepage = "https://github.com/ignlg/pingkeeper"
 repository = "https://github.com/ignlg/pingkeeper"
-keywords = [
-  "launcher",
-  "daemon",
-  "openvpn",
-  "vpn",
-  "network",
-  "monitoring",
-  "ping",
-  "macos",
-  "unix",
-  "unix-shell",
-  "unix-command",
-  "linux",
-  "launch-daemon",
-  "shell",
-]
+keywords = ["cli", "network", "linux", "macos", "tool"]
 
 [dependencies]
 structopt = "0.3"
