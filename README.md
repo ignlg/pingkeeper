@@ -30,17 +30,17 @@ Three options:
 
 1.  Download release binaries from [releases page][releases-link].
 
-1.  _recommended_ Check the integrity of the downloaded file:
+1.  Check the integrity of the downloaded file _(version may vary)_:
 
         sha512sum --check pingkeeper-macos-v3.0.0.tar.gz.sha512
 
     It should say: `pingkeeper-macos-v3.0.0.tar.gz: OK`
 
-1.  Extract archive with:
+1.  Extract archive _(version may vary)_ with:
 
         tar xvf pingkeeper-macos-v3.0.0.tar.gz
 
-1.  _recommended_ Check the integrity of the binary file with:
+1.  Check the integrity of the binary file with:
 
         sha512sum --check pingkeeper.sha512
 
@@ -157,6 +157,10 @@ Help available running `pingkeeper --help`:
 
 ## Changelog
 
+### v3.0.1
+
+- [x] improve documentation.
+
 ### v3.0.0
 
 - [x] detect network connection directly.
@@ -230,7 +234,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 [downloads-image]: https://img.shields.io/crates/d/pingkeeper
 [crate-link]: https://crates.io/crates/pingkeeper
 [license-image]: https://img.shields.io/crates/l/pingkeeper
-[license-link]: https://github.com/ignlg/pingkeeper/blob/next/LICENSE.md
+[license-link]: https://github.com/ignlg/pingkeeper/blob/next/LICENSE
 [rustc-image]: https://img.shields.io/badge/rustc-1.36+-blue.svg
 [safety-image]: https://img.shields.io/badge/unsafe-forbidden-success
 [safety-link]: https://github.com/rust-secure-code/safety-dance/
@@ -238,7 +242,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 [build-link]: https://travis-ci.org/ignlg/pingkeeper
 [releases-image]: https://img.shields.io/github/release-date/ignlg/pingkeeper
 [releases-link]: https://github.com/ignlg/pingkeeper/releases
-[stability-image]: https://img.shields.io/badge/stability-stable-green
+[stability-image]: https://img.shields.io/badge/stability-stable-blue
+[librariesio-image]: https://img.shields.io/librariesio/release/ignlg/pingkeeper
+[librariesio-link]: https://libraries.io/github/ignlg/pingkeeper
 [//]: # "links"
 [rust-link]: https://www.rust-lang.org/
 [hummingbird-link]: https://gitlab.com/AirVPN/hummingbird
