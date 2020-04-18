@@ -91,7 +91,7 @@ pub struct Opt {
     ///
     /// Log levels:
     /// 0 = error, 1 = warning, 2 = info, 3 = debug.
-    #[structopt(short, parse(from_occurrences), default_value = "0")]
+    #[structopt(short, parse(from_occurrences))]
     pub verbose: u32,
     /// Do not output anything from COMMAND output, also reduces `-v` by one.
     #[structopt(short, long)]
