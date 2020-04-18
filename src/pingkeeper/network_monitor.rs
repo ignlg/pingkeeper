@@ -16,12 +16,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use pipeliner::Pipeline;
 use rand::{seq::SliceRandom, thread_rng};
-use std::process;
 
-use std::net::{SocketAddr, TcpStream};
+use std::net::SocketAddr;
 use std::time::Duration;
+
+mod tools;
+use tools::*;
 
 const DEFAULT_TIMEOUT: u64 = 2;
 
@@ -30,56 +31,13 @@ const DEFAULT_TIMEOUT: u64 = 2;
 pub enum NetworkError {
   NetworkUnreachable,
   NoHostsToCheck,
-  NoPort,
   InvalidTimeout,
-}
-
-/// Pings a host and returns if it is reachable
-fn ping(ping_opt: &str, host: &str) -> bool {
-  process::Command::new("/bin/sh")
-    .arg("-c")
-    .arg(&format!("ping {} {}", ping_opt, host))
-    .output()
-    .expect("No shell?")
-    .status
-    .success()
-}
-
-/// Checks if a ping replies from one host at least
-fn can_ping_some(hosts: Vec<String>, ping_opt: String) -> bool {
-  if ping(&ping_opt, &hosts[0]) {
-    return true;
-  }
-  let n = hosts.len();
-  for result in hosts.with_threads(n).map(move |s| ping(&ping_opt, &s)) {
-    if result {
-      return true;
-    }
-  }
-  false
-}
-
-/// Checks if a connect can be stablished to one address at least
-fn can_connect_some(addresses: Vec<SocketAddr>, timeout: Duration) -> bool {
-  if TcpStream::connect_timeout(&addresses[0], timeout).is_ok() {
-    return true;
-  }
-  let n = addresses.len();
-  for result in addresses
-    .with_threads(n)
-    .map(move |addr| TcpStream::connect_timeout(&addr, timeout).is_ok())
-  {
-    if result {
-      return true;
-    }
-  }
-  false
 }
 
 /// Network monitor
 pub struct NetworkMonitor {
   hosts: Vec<String>,
-  port: Option<u32>,
+  addresses: Vec<SocketAddr>,
   ping_opt: Option<String>,
   timeout: Duration,
 }
@@ -87,10 +45,11 @@ pub struct NetworkMonitor {
 // Public
 impl NetworkMonitor {
   /// Instantiates a new NetworkMonitor
-  pub fn new(hosts: Vec<String>) -> Self {
+  pub fn new(hosts: Vec<String>, port: Option<u16>) -> Self {
+    let addresses = hosts_to_addresses(&hosts, port);
     NetworkMonitor {
       hosts,
-      port: None,
+      addresses,
       ping_opt: None,
       timeout: Duration::from_secs(DEFAULT_TIMEOUT),
     }
@@ -115,17 +74,11 @@ impl NetworkMonitor {
   }
   /// Checks if network is reachable
   pub fn is_network_reachable(&self) -> Result<(), NetworkError> {
-    if self.hosts.is_empty() {
-      return Err(NetworkError::NoHostsToCheck);
-    } else if self.port.is_none() {
-      return Err(NetworkError::NoPort);
-    }
-    let port = self.port.unwrap();
-    let mut addresses: Vec<SocketAddr> = self.get_addresses(port);
-    if addresses.is_empty() {
+    if self.addresses.is_empty() {
       return Err(NetworkError::NoHostsToCheck);
     }
     let mut rng = thread_rng();
+    let mut addresses = self.addresses.clone();
     addresses.shuffle(&mut rng);
     if can_connect_some(addresses, self.timeout) {
       Ok(())
@@ -134,10 +87,11 @@ impl NetworkMonitor {
     }
   }
 
-  /// Sets port, for is_network_reachable
-  pub fn set_port(&mut self, port: u32) {
-    self.port = Some(port);
-  }
+  // /// Sets port, for is_network_reachable
+  // pub fn set_port(&mut self, port: u16) {
+  //   self.port = Some(port);
+  //   self.addresses = hosts_to_addresses(&self.hosts, self.port);
+  // }
   /// Sets ping options, for is_ping_pong
   pub fn set_ping_opt(&mut self, ping_opt: String) {
     self.ping_opt = Some(ping_opt);
@@ -153,23 +107,6 @@ impl NetworkMonitor {
   }
 }
 
-// Private
-impl NetworkMonitor {
-  /// Gets hosts as network addresses
-  fn get_addresses(&self, port: u32) -> Vec<SocketAddr> {
-    self
-      .hosts
-      .iter()
-      .map(|addr| {
-        let ip_port = format!("{}:{}", addr, port);
-        ip_port.parse::<SocketAddr>()
-      })
-      .filter(|addr| addr.is_ok())
-      .map(|addr| addr.unwrap())
-      .collect()
-  }
-}
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -177,12 +114,12 @@ mod tests {
   #[test]
   fn new() {
     let hosts = vec![String::from("8.8.8.8")];
-    let _ping = NetworkMonitor::new(hosts);
+    let _ping = NetworkMonitor::new(hosts, None);
   }
   #[test]
   fn set_timeout() {
     let hosts = vec![String::from("8.8.8.8")];
-    let mut network = NetworkMonitor::new(hosts);
+    let mut network = NetworkMonitor::new(hosts, None);
     assert!(network.set_timeout(0).is_err());
     assert!(network.set_timeout(2).is_ok());
   }
@@ -191,7 +128,7 @@ mod tests {
   fn ping_pong() {
     let hosts = vec![String::from("127.0.0.1")];
     let ping_opt = String::from("-c1");
-    let mut ping = NetworkMonitor::new(hosts);
+    let mut ping = NetworkMonitor::new(hosts, None);
     ping.set_ping_opt(ping_opt);
     assert!(ping.is_ping_pong().is_ok());
   }
@@ -199,7 +136,7 @@ mod tests {
   fn no_ping_pong() {
     let hosts = vec![String::from("256.0.0.0")];
     let ping_opt = String::from("-c1");
-    let mut ping = NetworkMonitor::new(hosts);
+    let mut ping = NetworkMonitor::new(hosts, None);
     ping.set_ping_opt(ping_opt);
     let err = ping.is_ping_pong();
     assert!(err.is_err());
@@ -207,33 +144,18 @@ mod tests {
   }
   // Network
   #[test]
-  fn get_hosts_addresses() {
-    let hosts = vec![String::from("127.0.0.1")];
-    let port = 53;
-    let mut network = NetworkMonitor::new(hosts);
-    network.set_port(port);
-    assert_eq!(network.get_addresses(port).len(), 1);
-  }
-  #[test]
   fn is_network_reachable() {
     // Requires internet connection
     let hosts = vec![String::from("1.0.0.1")];
-    let mut network = NetworkMonitor::new(hosts);
-    network.set_port(53);
+    let network = NetworkMonitor::new(hosts, Some(53));
     assert!(network.is_network_reachable().is_ok());
   }
   #[test]
   fn is_network_unreachable() {
     let hosts = vec![String::from("255.255.255.255")];
-    let mut network = NetworkMonitor::new(hosts);
-    network.set_port(53);
+    let network = NetworkMonitor::new(hosts, Some(53));
     let err = network.is_network_reachable();
     assert!(err.is_err());
     assert_eq!(err.unwrap_err(), NetworkError::NetworkUnreachable);
-  }
-  #[test]
-  fn ping_function() {
-    assert!(ping("-c1", "127.0.0.1"));
-    assert!(!ping("-c1", "256.0.0.0"));
   }
 }

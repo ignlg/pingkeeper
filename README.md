@@ -110,46 +110,59 @@ Help available running `pingkeeper --help`:
                 Prints help information
 
         -k, --keep-alive
-                Run command on start and restart it if command dies
+                Keep COMMAND alive.
 
+                Run COMMAND on start, also restart it when it dies.
         -q, --quiet
-                Do not output anything from command output, also reduces -v by 1
+                Do not output anything from COMMAND output, also reduces `-v` by one
 
-                --use-ping
-                Use ping command
+        -P, --use-ping
+                Use `ping` to check connection.
 
+                Use system's `ping` command to check network connection.
         -V, --version
                 Prints version information
 
-        -v
-                Verbose, -v -vv -vvv
-
 
         OPTIONS:
-                --hosts <hosts>
-                Hosts to ping, order is ignored [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
+        -H, --hosts <hosts>
+                Space separated list of addresses or hosts (ping).
 
+                For direct connection: List of IPv4 and IPv6, with or without port.
+
+                For ping: List of hosts.
+
+                Order does not matter, list will be shuffled. [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
         -m, --max-errors <max-errors>
-                Maximum number of command errors in a row, 0 for infinite [default: 0]
+                Maximum number of COMMAND errors in a row.
 
-                --network-every <n>
-                Check network again after this amount of seconds from the latest success [default: 5]
+                0 for infinite. Only used by `--keep-alive`. [default: 0]
+        -n, --network-every <n>
+                Network check delay, in seconds.
 
+                Check network again after this amount of seconds from the latest success. [default: 5]
                 --ping-opt <opts>
-                Options for ping command, only valid with --use-ping [default: -c1]
+                Options for `ping` command, requires `--use-ping` [default: -c1]
 
-                --port <port>
-                Port to connect on every host, only valid without --use-ping [default: 53]
+        -p, --port <port>
+                Default port to connect, ignored if `--use-ping`.
 
-                --wait-after-exec <seconds>
-                Seconds to check ping after executing command [default: 5]
+                Port to connect if host does not have a port specified. [default: 53]
+        -w, --wait-after-exec <seconds>
+                Execution delay, in seconds.
 
+                Seconds to check network for the first time after executing COMMAND. [default: 5]
         -s, --signal <signal>
-                Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc [default: SIGINT]
+                Signal to kill COMMAND.
 
+                Could be any unix signal: `SIGINT`, `SIGTERM`, etc. [default: SIGINT]
         -t, --timeout <timeout>
-                Timeout in seconds, only valid without --use-ping [default: 2]
+                Timeout in seconds, ignored if `--use-ping` [default: 2]
 
+        -v <verbose>...
+                Verbosity, -v -vv -vvv.
+
+                Log levels: 0 = error, 1 = warning, 2 = info, 3 = debug. [default: 0]
 
         ARGS:
         <COMMAND>
@@ -157,10 +170,18 @@ Help available running `pingkeeper --help`:
 
 ## Changelog
 
+### v3.1.0
+
+- [x] support addresses with port in `--hosts`.
+- [x] support IPv4 and IPv6 addresses.
+- [x] improve documentation.
+- [x] improve tests.
+
 ### v3.0.2
 
 - [x] improve documentation.
 - [x] improve tests.
+- [x] add usage examples to docs.
 
 ### v3.0.1
 
@@ -198,12 +219,11 @@ Help available running `pingkeeper --help`:
 
 ## Backlog
 
-- [x] add usage examples to docs.
 - [ ] improve generated docs.
 - [ ] export lib too.
+- [ ] pingkeeper tests with mocks.
 - [ ] opt `--kill-cmd`, custom kill command.
 - [ ] opt `--check-cmd`, custom check network command.
-- [ ] pingkeeper tests with mocks.
 - [ ] website.
 - [ ] LaunchDaemon generator.
 - [ ] macOS notifications: connection lost, connection recovered.

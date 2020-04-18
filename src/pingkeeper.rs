@@ -63,8 +63,7 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
         return Err(PingkeeperError::NoHostsToPing);
     }
     // network monitor
-    let mut network = NetworkMonitor::new(hosts);
-    network.set_port(opt.port);
+    let mut network = NetworkMonitor::new(hosts, Some(opt.port));
     network.set_ping_opt(opt.ping_opt);
     if network.set_timeout(opt.timeout as u64).is_err() {
         return Err(PingkeeperError::InvalidTimeout);

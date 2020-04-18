@@ -27,48 +27,73 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Pingkeeper")]
 pub struct Opt {
-    /// Command to run
+    /// Command to run.
     #[structopt(name = "COMMAND")]
     pub command: String,
-    /// Hosts to ping, order is ignored
-    #[structopt(long, default_value = "8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1")]
+    /// Space separated list of addresses or hosts (ping).
+    ///
+    /// For direct connection: List of IPv4 and IPv6, with or without port.
+    ///
+    /// For ping: List of hosts.
+    ///
+    /// Order does not matter, list will be shuffled.
+    #[structopt(short = "H", long, default_value = "8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1")]
     pub hosts: String,
-    /// Port to connect on every host, only valid without --use-ping
-    #[structopt(long, default_value = "53")]
-    pub port: u32,
-    /// Timeout in seconds, only valid without --use-ping
+    /// Default port to connect, ignored if `--use-ping`.
+    ///
+    /// Port to connect if host does not have a port specified.
+    #[structopt(short, long, default_value = "53")]
+    pub port: u16,
+    /// Timeout in seconds, ignored if `--use-ping`.
     #[structopt(short, long, default_value = "2")]
     pub timeout: u32,
 
-    /// Use ping command
-    #[structopt(long)]
+    /// Use `ping` to check connection.
+    ///
+    /// Use system's `ping` command to check network connection.
+    #[structopt(short = "P", long)]
     pub use_ping: bool,
-    /// Options for ping command, only valid with --use-ping
+    /// Options for `ping` command, requires `--use-ping`.
     #[structopt(long, name = "opts", default_value = "-c1")]
     pub ping_opt: String,
 
-    /// Run command on start and restart it if command dies
+    /// Keep COMMAND alive.
+    ///
+    /// Run COMMAND on start, also restart it when it dies.
     #[structopt(short, long)]
     pub keep_alive: bool,
 
-    /// Seconds to check ping after executing command
-    #[structopt(long, name = "seconds", default_value = "5")]
+    /// Execution delay, in seconds.
+    ///
+    /// Seconds to check network for the first time after executing COMMAND.
+    #[structopt(short, long, name = "seconds", default_value = "5")]
     pub wait_after_exec: usize,
-    /// Check network again after this amount of seconds from the latest success
-    #[structopt(long, name = "n", default_value = "5")]
+
+    /// Network check delay, in seconds.
+    ///
+    /// Check network again after this amount of seconds from the latest success.
+    #[structopt(short, long, name = "n", default_value = "5")]
     pub network_every: usize,
 
-    /// Signal to end command on command restart: `SIGINT`, `SIGTERM`, etc
+    /// Signal to kill COMMAND.
+    ///
+    /// Could be any unix signal: `SIGINT`, `SIGTERM`, etc.
     #[structopt(short, long, default_value = "SIGINT")]
     pub signal: String,
-    /// Maximum number of command errors in a row, 0 for infinite
+
+    /// Maximum number of COMMAND errors in a row.
+    ///
+    /// 0 for infinite. Only used by `--keep-alive`.
     #[structopt(short, long, default_value = "0")]
     pub max_errors: usize,
 
-    /// Verbose, -v -vv -vvv
-    #[structopt(short, parse(from_occurrences))]
+    /// Verbosity, -v -vv -vvv.
+    ///
+    /// Log levels:
+    /// 0 = error, 1 = warning, 2 = info, 3 = debug.
+    #[structopt(short, parse(from_occurrences), default_value = "0")]
     pub verbose: u32,
-    /// Do not output anything from command output, also reduces -v by 1
+    /// Do not output anything from COMMAND output, also reduces `-v` by one.
     #[structopt(short, long)]
     pub quiet: bool,
 }
