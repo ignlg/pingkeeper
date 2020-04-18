@@ -32,13 +32,13 @@ Three options:
 
 1.  Check the integrity of the downloaded file _(version may differ)_:
 
-        sha512sum --check pingkeeper-macos-v3.0.0.tar.gz.sha512
+        sha512sum --check pingkeeper-macos-v3.1.1.tar.gz.sha512
 
-    It should say: `pingkeeper-macos-v3.0.0.tar.gz: OK`
+    It should say: `pingkeeper-macos-v3.1.1.tar.gz: OK`
 
 1.  Extract archive _(version may differ)_ with:
 
-        tar xvf pingkeeper-macos-v3.0.0.tar.gz
+        tar xvf pingkeeper-macos-v3.1.1.tar.gz
 
 1.  Check the integrity of the binary file with:
 
@@ -169,6 +169,10 @@ Help available running `pingkeeper --help`:
                 Command to run
 
 ## Changelog
+
+### v3.1.1
+
+- [x] fix error with option `-v`.
 
 ### v3.1.0
 
