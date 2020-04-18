@@ -89,7 +89,7 @@ This requires the stable version of `rust` & `cargo` installed. Visit [Rust webs
 - Tweet when your [opentracker][opentracker-link] bittorrent tracker server seems down, using [t][t-link]:
 
   ```shell
-  pingkeeper --hosts "10.1.1.28" --port 6969 "t update \"Dear users, the tracker is currently down :(\""
+  pingkeeper --hosts "10.1.1.28:6969" "t update \"Dear users, the tracker is currently down :(\""
   ```
 
 - Run your own script when the damn wifi seems down again:
