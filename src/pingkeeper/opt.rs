@@ -57,31 +57,39 @@ pub struct Opt {
     #[structopt(long, name = "opts", default_value = "-c1")]
     pub ping_opt: String,
 
-    /// Keep COMMAND alive.
+    /// Use custom command to check
     ///
-    /// Run COMMAND on start, also restart it when it dies.
+    /// Check network or something else. This will trigger the execution / kill flow as if it was a network check.
+    /// Example: --check-cmd "cat canary.txt"
+    #[structopt(long)]
+    pub check_cmd: Option<String>,
+    /// Keep <COMMAND> alive.
+    ///
+    /// Run <COMMAND> on start, also restart it when it dies.
     #[structopt(short, long)]
     pub keep_alive: bool,
-
     /// Execution delay, in seconds.
     ///
-    /// Seconds to check network for the first time after executing COMMAND.
+    /// Seconds to check network for the first time after executing <COMMAND>.
     #[structopt(short, long, name = "seconds", default_value = "5")]
     pub wait_after_exec: usize,
-
     /// Network check delay, in seconds.
     ///
     /// Check network again after this amount of seconds from the latest success.
     #[structopt(short, long, name = "n", default_value = "5")]
     pub network_every: usize,
-
-    /// Signal to kill COMMAND.
+    /// Signal to kill <COMMAND>.
     ///
     /// Could be any unix signal: `SIGINT`, `SIGTERM`, etc.
     #[structopt(short, long, default_value = "SIGINT")]
     pub signal: String,
+    /// Use custom command to kill
+    ///
+    /// Example: --kill-cmd "echo \"My baby shot me down\" >> bang_bang.log"
+    #[structopt(long)]
+    pub kill_cmd: Option<String>,
 
-    /// Maximum number of COMMAND errors in a row.
+    /// Maximum number of <COMMAND> errors in a row.
     ///
     /// 0 for infinite. Only used by `--keep-alive`.
     #[structopt(short, long, default_value = "0")]
@@ -93,7 +101,7 @@ pub struct Opt {
     /// 0 = error, 1 = warning, 2 = info, 3 = debug.
     #[structopt(short, parse(from_occurrences))]
     pub verbose: u32,
-    /// Do not output anything from COMMAND output, also reduces `-v` by one.
+    /// Do not output anything from <COMMAND> output, also reduces `-v` by one.
     #[structopt(short, long)]
     pub quiet: bool,
 }

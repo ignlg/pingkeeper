@@ -31,6 +31,50 @@ use network_monitor::NetworkMonitor;
 mod logger;
 use logger::{logger, LogLevel};
 
+// ---------------------- Spawn ----------------------
+/// Spawn errors
+#[derive(Debug, Eq, PartialEq)]
+enum SpawnErr {
+    KillErr(u32),
+    SpawnErr,
+}
+/// Spawn errors
+#[derive(Debug, Eq, PartialEq)]
+enum SpawnOk {
+    KillOk(u32),
+    SpawnOk(u32),
+}
+
+fn spawn_controller(
+    executor: &mut Executor,
+    kill_cmd: &Option<String>,
+    quiet: bool,
+) -> Result<SpawnOk, SpawnErr> {
+    // If previous child pid, kill
+    if let Some(pid) = executor.get_pid() {
+        if let Some(cmd) = kill_cmd {
+            if executor.kill_custom_cmd(cmd).is_ok() {
+                Ok(SpawnOk::KillOk(pid))
+            } else {
+                Err(SpawnErr::KillErr(pid))
+            }
+        } else if executor.kill().is_ok() {
+            Ok(SpawnOk::KillOk(pid))
+        } else {
+            Err(SpawnErr::KillErr(pid))
+        }
+    } else {
+        executor.spawn(quiet);
+        if let Some(pid) = executor.get_pid() {
+            Ok(SpawnOk::SpawnOk(pid))
+        } else {
+            Err(SpawnErr::SpawnErr)
+        }
+    }
+}
+
+// ---------------------- Pingkeeper ----------------------
+
 /// Pingkeeper errors
 #[derive(Debug, Eq, PartialEq)]
 pub enum PingkeeperError {
@@ -76,43 +120,39 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
     let wait_boot_ms = opt.wait_after_exec * 1000;
     let wait_check_ms = opt.network_every * 1000;
     // flags and counters
-    let mut is_boot = false;
+    let mut is_executing = false;
     let mut time_since_last_check: usize = 0;
     let mut errors_in_a_row: usize = 0;
     loop {
         let should_spawn;
         match executor.is_alive() {
             Ok(is_alive) => {
-                if is_alive || !opt.keep_alive {
-                    if opt.max_errors > 0 {
+                // Clean exit?
+                if !is_alive && opt.max_errors > 0 {
+                    // Allowed?
+                    if !opt.keep_alive {
                         errors_in_a_row = 0;
-                    }
-                    // Do nothing if too early after boot or after check
-                    if (is_boot && time_since_last_check < wait_boot_ms)
-                        || (!is_boot && time_since_last_check < wait_check_ms)
-                    {
-                        should_spawn = false;
                     } else {
-                        is_boot = false;
-                        if (!opt.use_ping && network.is_network_reachable().is_ok())
-                            || (opt.use_ping && network.is_ping_pong().is_ok())
-                        {
-                            // Network is working
-                            logger(LogLevel::DEBUG, String::from("Network reachable"));
-                            should_spawn = false;
-                        } else {
-                            // Network unreachable
-                            logger(LogLevel::WARN, String::from("Network unreachable"));
-                            should_spawn = true;
-                        }
-                        time_since_last_check = 0;
-                    }
-                } else {
-                    logger(LogLevel::WARN, String::from("Child process is dead"));
-                    if opt.max_errors > 0 {
                         errors_in_a_row += 1;
                     }
+                }
+                if opt.keep_alive && !is_alive {
+                    logger(LogLevel::WARN, String::from("Child process is dead"));
                     should_spawn = true;
+                } else if (is_executing && time_since_last_check < wait_boot_ms)
+                    || (!is_executing && time_since_last_check < wait_check_ms)
+                {
+                    should_spawn = false;
+                } else {
+                    is_executing = false;
+                    if network.check(&opt.check_cmd, opt.use_ping).is_ok() {
+                        logger(LogLevel::DEBUG, String::from("Network reachable"));
+                        should_spawn = false;
+                    } else {
+                        logger(LogLevel::WARN, String::from("Network unreachable"));
+                        should_spawn = true;
+                    }
+                    time_since_last_check = 0;
                 }
             }
             Err(err) => {
@@ -136,32 +176,28 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
                 LogLevel::DEBUG,
                 String::from("Should spawn a child process"),
             );
-            // If previous child, SIGINT
-            if let Some(pid) = executor.get_pid() {
-                if executor.kill().is_ok() {
-                    logger(LogLevel::INFO, format!("Sent SIGINT to pid {}", pid));
-                } else {
-                    logger(
-                        LogLevel::ERROR,
-                        format!("Could not send SIGINT to pid {}", pid),
-                    );
+            match spawn_controller(&mut executor, &opt.kill_cmd, opt.quiet) {
+                // Kill
+                Ok(SpawnOk::KillOk(pid)) => {
+                    logger(LogLevel::INFO, format!("Kill done for pid {}", pid))
                 }
-            } else {
-                executor.execute(opt.quiet);
-                if let Some(pid) = executor.get_pid() {
+                Err(SpawnErr::KillErr(pid)) => {
+                    logger(LogLevel::ERROR, format!("Cannot kill pid {}", pid))
+                }
+                // Spawn
+                Ok(SpawnOk::SpawnOk(pid)) => {
+                    is_executing = true;
                     logger(
                         LogLevel::INFO,
                         format!("Child process starting with pid {}", pid),
-                    );
-                    is_boot = true;
-                } else {
-                    logger(
-                        LogLevel::ERROR,
-                        String::from("Child process is dead on boot"),
-                    );
+                    )
                 }
-            }
-        } else if !is_boot && time_since_last_check >= wait_check_ms {
+                Err(SpawnErr::SpawnErr) => logger(
+                    LogLevel::ERROR,
+                    String::from("Child process is dead on boot"),
+                ),
+            };
+        } else if !is_executing && time_since_last_check >= wait_check_ms {
             // Time to check network again
             time_since_last_check = 0;
         }
@@ -174,6 +210,7 @@ pub fn pingkeeper(opt: Opt) -> Result<(), PingkeeperError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use executor::Executor;
 
     #[test]
     fn without_hosts() {
@@ -191,6 +228,8 @@ mod tests {
             verbose: 0,
             wait_after_exec: 5,
             timeout: 2,
+            check_cmd: None,
+            kill_cmd: None,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());
@@ -212,9 +251,30 @@ mod tests {
             verbose: 0,
             wait_after_exec: 1,
             timeout: 2,
+            check_cmd: None,
+            kill_cmd: None,
         };
         let error = pingkeeper(opt);
         assert!(error.is_err());
         assert_eq!(error.unwrap_err(), PingkeeperError::TooManyErrors);
+    }
+    #[test]
+    fn spawn_controller_test() {
+        let mut executor = Executor::new(String::from("cat"));
+        // Should spawn
+        match spawn_controller(&mut executor, &None, true) {
+            Ok(SpawnOk::SpawnOk(_)) => {}
+            res => panic!(format!("Invalid result {:?}", res)),
+        }
+        // Should kill
+        match spawn_controller(&mut executor, &None, true) {
+            Ok(SpawnOk::KillOk(_)) => {}
+            res => panic!(format!("Invalid result {:?}", res)),
+        }
+        // Should spawn
+        match spawn_controller(&mut executor, &None, true) {
+            Ok(SpawnOk::SpawnOk(_)) => {}
+            res => panic!(format!("Invalid result {:?}", res)),
+        }
     }
 }

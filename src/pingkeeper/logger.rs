@@ -19,32 +19,32 @@
 /// Verbosity levels
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub enum LogLevel {
-  QUIET = 0,
-  ERROR,
-  WARN,
-  INFO,
-  DEBUG,
+    QUIET = 0,
+    ERROR,
+    WARN,
+    INFO,
+    DEBUG,
 }
 
 impl From<u32> for LogLevel {
-  fn from(number: u32) -> Self {
-    match number {
-      x if x == LogLevel::QUIET as u32 => LogLevel::QUIET,
-      x if x == LogLevel::ERROR as u32 => LogLevel::ERROR,
-      x if x == LogLevel::WARN as u32 => LogLevel::WARN,
-      x if x == LogLevel::INFO as u32 => LogLevel::INFO,
-      _ => LogLevel::DEBUG,
+    fn from(number: u32) -> Self {
+        match number {
+            x if x == LogLevel::QUIET as u32 => LogLevel::QUIET,
+            x if x == LogLevel::ERROR as u32 => LogLevel::ERROR,
+            x if x == LogLevel::WARN as u32 => LogLevel::WARN,
+            x if x == LogLevel::INFO as u32 => LogLevel::INFO,
+            _ => LogLevel::DEBUG,
+        }
     }
-  }
 }
 
 /// Returns a logger function that writes message to stdout/stderr if verbosity level allows it
 pub fn logger(verbose: LogLevel) -> impl Fn(LogLevel, String) -> () {
-  move |level: LogLevel, message: String| match (level, verbose) {
-    (LogLevel::ERROR, v) if v >= LogLevel::ERROR => eprintln!("PK error: {}", message),
-    (LogLevel::WARN, v) if v >= LogLevel::WARN => println!("PK warn:  {}", message),
-    (LogLevel::INFO, v) if v >= LogLevel::INFO => println!("PK info:  {}", message),
-    (LogLevel::DEBUG, v) if v >= LogLevel::DEBUG => println!("PK debug: {}", message),
-    (_, _) => (),
-  }
+    move |level: LogLevel, message: String| match (level, verbose) {
+        (LogLevel::ERROR, v) if v >= LogLevel::ERROR => eprintln!("PK error: {}", message),
+        (LogLevel::WARN, v) if v >= LogLevel::WARN => println!("PK warn:  {}", message),
+        (LogLevel::INFO, v) if v >= LogLevel::INFO => println!("PK info:  {}", message),
+        (LogLevel::DEBUG, v) if v >= LogLevel::DEBUG => println!("PK debug: {}", message),
+        (_, _) => (),
+    }
 }
