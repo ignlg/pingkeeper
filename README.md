@@ -8,7 +8,9 @@
 [![Release Date][releases-image]][releases-link]
 ![Stability stable][stability-image]
 
-Command line application that monitorizes that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
+Command line application that monitorizes the exit status of a _check command_ and, in case of failure, runs another _main command_. Optionally it can monitor that the provided _main command_ is permanently running, triggering a restart (kill & run) if _check command_ fails.
+
+Primarily intended for checking if network is reachable (direct tcp connection or ping), current releases can do much more with the addition of **custom check and kill commands.**
 
 Proudly made from Barcelona with Rust 🦀.
 
@@ -32,13 +34,13 @@ Three options:
 
 1.  Check the integrity of the downloaded file _(version may differ)_:
 
-        sha512sum --check pingkeeper-macos-v3.1.1.tar.gz.sha512
+        sha512sum --check pingkeeper-macos-v3.2.0.tar.gz.sha512
 
-    It should say: `pingkeeper-macos-v3.1.1.tar.gz: OK`
+    It should say: `pingkeeper-macos-v3.2.0.tar.gz: OK`
 
 1.  Extract archive _(version may differ)_ with:
 
-        tar xvf pingkeeper-macos-v3.1.1.tar.gz
+        tar xvf pingkeeper-macos-v3.2.0.tar.gz
 
 1.  Check the integrity of the binary file with:
 
@@ -98,77 +100,103 @@ This requires the stable version of `rust` & `cargo` installed. Visit [Rust webs
   pingkeeper "/home/user/try_reset_router.sh"
   ```
 
+- Shutdown server when the canary file is missing:
+
+  ```shell
+  sudo pingkeeper --check-cmd "cat /root/canary.txt" --kill-cmd "echo" "shutdown -h now"
+  ```
+
 ### Usage manual
 
 Help available running `pingkeeper --help`:
 
-        USAGE:
-        pingkeeper [FLAGS] [OPTIONS] <COMMAND>
+```
 
-        FLAGS:
-        -h, --help
-                Prints help information
+USAGE:
+    pingkeeper [FLAGS] [OPTIONS] <COMMAND>
 
-        -k, --keep-alive
-                Keep COMMAND alive.
+FLAGS:
+    -h, --help
+            Prints help information
 
-                Run COMMAND on start, also restart it when it dies.
-        -q, --quiet
-                Do not output anything from COMMAND output, also reduces `-v` by one
+    -k, --keep-alive
+            Keep <COMMAND> alive.
 
-        -P, --use-ping
-                Use `ping` to check connection.
+            Run <COMMAND> on start, also restart it when it dies.
+    -q, --quiet
+            Do not output anything from <COMMAND> output, also reduces `-v` by one
 
-                Use system's `ping` command to check network connection.
-        -V, --version
-                Prints version information
+    -P, --use-ping
+            Use `ping` to check connection.
+
+            Use system's `ping` command to check network connection.
+    -V, --version
+            Prints version information
+
+    -v
+            Verbosity, -v -vv -vvv.
+
+            Log levels: 0 = error, 1 = warning, 2 = info, 3 = debug.
+
+OPTIONS:
+        --check-cmd <check-cmd>
+            Use custom command to check
+
+            Check network or something else. This will trigger the execution / kill flow as if it was a network check.
+            Example: --check-cmd "cat canary.txt"
+    -H, --hosts <hosts>
+            Space separated list of addresses or hosts (ping).
+
+            For direct connection: List of IPv4 and IPv6, with or without port.
+
+            For ping: List of hosts.
+
+            Order does not matter, list will be shuffled. [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
+        --kill-cmd <kill-cmd>
+            Use custom command to kill
+
+            Example: --kill-cmd "echo \"My baby shot me down\" >> bang_bang.log"
+    -m, --max-errors <max-errors>
+            Maximum number of <COMMAND> errors in a row.
+
+            0 for infinite. Only used by `--keep-alive`. [default: 0]
+    -n, --network-every <n>
+            Network check delay, in seconds.
+
+            Check network again after this amount of seconds from the latest success. [default: 5]
+        --ping-opt <opts>
+            Options for `ping` command, requires `--use-ping` [default: -c1]
+
+    -p, --port <port>
+            Default port to connect, ignored if `--use-ping`.
+
+            Port to connect if host does not have a port specified. [default: 53]
+    -w, --wait-after-exec <seconds>
+            Execution delay, in seconds.
+
+            Seconds to check network for the first time after executing <COMMAND>. [default: 5]
+    -s, --signal <signal>
+            Signal to kill <COMMAND>.
+
+            Could be any unix signal: `SIGINT`, `SIGTERM`, etc. [default: SIGINT]
+    -t, --timeout <timeout>
+            Timeout in seconds, ignored if `--use-ping` [default: 2]
 
 
-        OPTIONS:
-        -H, --hosts <hosts>
-                Space separated list of addresses or hosts (ping).
+ARGS:
+    <COMMAND>
+            Command to run
 
-                For direct connection: List of IPv4 and IPv6, with or without port.
-
-                For ping: List of hosts.
-
-                Order does not matter, list will be shuffled. [default: 8.8.8.8 8.8.6.6 1.1.1.1 1.0.0.1]
-        -m, --max-errors <max-errors>
-                Maximum number of COMMAND errors in a row.
-
-                0 for infinite. Only used by `--keep-alive`. [default: 0]
-        -n, --network-every <n>
-                Network check delay, in seconds.
-
-                Check network again after this amount of seconds from the latest success. [default: 5]
-                --ping-opt <opts>
-                Options for `ping` command, requires `--use-ping` [default: -c1]
-
-        -p, --port <port>
-                Default port to connect, ignored if `--use-ping`.
-
-                Port to connect if host does not have a port specified. [default: 53]
-        -w, --wait-after-exec <seconds>
-                Execution delay, in seconds.
-
-                Seconds to check network for the first time after executing COMMAND. [default: 5]
-        -s, --signal <signal>
-                Signal to kill COMMAND.
-
-                Could be any unix signal: `SIGINT`, `SIGTERM`, etc. [default: SIGINT]
-        -t, --timeout <timeout>
-                Timeout in seconds, ignored if `--use-ping` [default: 2]
-
-        -v <verbose>...
-                Verbosity, -v -vv -vvv.
-
-                Log levels: 0 = error, 1 = warning, 2 = info, 3 = debug. [default: 0]
-
-        ARGS:
-        <COMMAND>
-                Command to run
+```
 
 ## Changelog
+
+### v3.2.0
+
+- [x] opt `--kill-cmd`, custom kill command.
+- [x] opt `--check-cmd`, custom check command.
+- [x] add tests.
+- [x] improve documentation.
 
 ### v3.1.1
 
@@ -223,11 +251,11 @@ Help available running `pingkeeper --help`:
 
 ## Backlog
 
+- [ ] wait for child after kill, then SIGTERM.
 - [ ] improve generated docs.
 - [ ] export lib too.
-- [ ] pingkeeper tests with mocks.
-- [ ] opt `--kill-cmd`, custom kill command.
-- [ ] opt `--check-cmd`, custom check network command.
+- [ ] integration tests: mocks.
+- [ ] integration tests: commandline.
 - [ ] website.
 - [ ] LaunchDaemon generator.
 - [ ] macOS notifications: connection lost, connection recovered.
