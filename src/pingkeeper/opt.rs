@@ -57,10 +57,10 @@ pub struct Opt {
     #[structopt(long, name = "opts", default_value = "-c1")]
     pub ping_opt: String,
 
-    /// Use custom command to check
+    /// Use a custom command to check.
     ///
     /// Check network or something else. This will trigger the execution / kill flow as if it was a network check.
-    /// Example: --check-cmd "cat canary.txt"
+    /// Example: `--check-cmd "cat canary.txt"`
     #[structopt(long)]
     pub check_cmd: Option<String>,
     /// Keep <COMMAND> alive.
@@ -83,9 +83,9 @@ pub struct Opt {
     /// Could be any unix signal: `SIGINT`, `SIGTERM`, etc.
     #[structopt(short, long, default_value = "SIGINT")]
     pub signal: String,
-    /// Use custom command to kill
+    /// Use a custom command to kill.
     ///
-    /// Example: --kill-cmd "echo \"My baby shot me down\" >> bang_bang.log"
+    /// Example: `--kill-cmd "echo \"My baby shot me down\" >> bang_bang.log"`
     #[structopt(long)]
     pub kill_cmd: Option<String>,
 

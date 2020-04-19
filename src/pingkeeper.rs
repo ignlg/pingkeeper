@@ -261,6 +261,7 @@ mod tests {
     #[test]
     fn spawn_controller_test() {
         let mut executor = Executor::new(String::from("cat"));
+        executor.set_signal("SIGTERM");
         // Should spawn
         match spawn_controller(&mut executor, &None, true) {
             Ok(SpawnOk::SpawnOk(_)) => {}
