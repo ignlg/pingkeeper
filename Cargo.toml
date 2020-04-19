@@ -3,7 +3,7 @@ name = "pingkeeper"
 description = """
 Command line application that monitorizes that network is reachable (direct tcp connection or ping) and, in case of failure, runs a command. Optionally it can monitor that the command is permanently running and restart it if network is unreachable.
 """
-version = "3.1.1"
+version = "3.2.0"
 authors = ["Ignacio Lago <ignacio@ignaciolago.com>"]
 edition = "2018"
 readme = "README.md"
