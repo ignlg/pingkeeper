@@ -69,7 +69,7 @@ jobs:
       CRATESIO_TOKEN: ${{ secrets.CRATESIO_TOKEN }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - name: Update apt
         run: sudo apt update
       - name: Install stable
