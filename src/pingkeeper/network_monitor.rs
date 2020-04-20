@@ -156,7 +156,7 @@ mod tests {
         let hosts = vec![String::from("127.0.0.1")];
         let custom = NetworkMonitor::new(hosts, None);
         assert!(custom.check_custom_cmd("echo").is_ok());
-        assert!(custom.check_custom_cmd("cat __pk__test__file").is_err());
+        assert!(custom.check_custom_cmd("cat __pk__test__file__").is_err());
     }
     // Ping
     #[test]
