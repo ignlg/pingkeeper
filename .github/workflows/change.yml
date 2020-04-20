@@ -1,0 +1,64 @@
+name: Cargo actions
+
+on: [push, pull_request]
+
+jobs:
+  # fmt
+  rustfmt-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install stable
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: Run rustfmt
+        uses: actions-rs/cargo@master
+        with:
+          command: fmt
+          args: --all -- --check
+
+  # clippy
+  cargo-clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install stable
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - name: Run clippy
+        uses: actions-rs/cargo@master
+        with:
+          command: clippy
+          args: --all-targets --all-features -- -D warnings
+
+  # test
+  cargo-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Update apt
+        run: sudo apt update
+      - name: Install stable
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Run tests
+        uses: actions-rs/cargo@master
+        with:
+          command: test
+          args: --verbose
+    # - name: Test docs
+    #   uses: actions-rs/cargo@master
+    #   with:
+    #     command: test
+    #     args: --doc --verbose
