@@ -1,0 +1,83 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "release/v*"
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: pingkeeper
+            asset_name: pingkeeper-linux-amd64
+          - os: macos-latest
+            artifact_name: pingkeeper
+            asset_name: pingkeeper-macos-amd64
+    steps:
+      - uses: actions/checkout@v2
+      - if: matrix.os == 'ubuntu-latest'
+        name: Update apt
+        run: sudo apt update
+      - name: Install stable
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Build release
+        id: build-release
+        env:
+          CRATE_BIN: ${{ matrix.artifact_name }}
+          CRATE_FILE: ${{ matrix.asset_name }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          export CRATE_VERSION="$(echo ${GITHUB_REF} | cut -d '/' -f 4)"
+          if [ -z ${CRATE_VERSION} ]
+          then
+            export CRATE_VERSION="test"
+          fi
+          export CRATE_ARCHIVE="${CRATE_FILE}-${CRATE_VERSION}.tar.gz"
+          cargo build --release
+          cd target/release
+          shasum -a 512 "${CRATE_BIN}" > "${CRATE_BIN}.sha512"
+          tar -czf "${CRATE_ARCHIVE}" "${CRATE_BIN}" "${CRATE_BIN}.sha512"
+          shasum -a 512 "${CRATE_ARCHIVE}" > "${CRATE_ARCHIVE}.sha512"
+          cd -
+          echo ::set-output name=crate_archive::${CRATE_ARCHIVE}
+      - name: Upload archive to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ steps.build-release.outputs.crate_archive }}
+          asset_name: ${{ steps.build-release.outputs.crate_archive }}
+          tag: ${{ github.ref }}
+      - name: Upload sha512 to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ steps.build-release.outputs.crate_archive }}.sha512
+          asset_name: ${{ steps.build-release.outputs.crate_archive }}.sha512
+          tag: ${{ github.ref }}
+
+  cargo-publish:
+    env:
+      CRATESIO_TOKEN: ${{ secrets.CRATESIO_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Update apt
+        run: sudo apt update
+      - name: Install stable
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Cargo publish
+        continue-on-error: true
+        run: cargo publish --token $CRATESIO_TOKEN --manifest-path pingkeeper/Cargo.toml

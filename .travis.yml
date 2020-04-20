@@ -5,7 +5,9 @@ rust:
   - nightly
 before_script:
   - rustup component add clippy
+  - rustup component add rustfmt
 script:
+  - cargo fmt --all -- --check
   - cargo clippy --all-targets --all-features -- -D warnings
   - cargo test
 matrix:
