@@ -15,7 +15,7 @@ keywords = ["cli", "network", "linux", "macos", "tool"]
 [dependencies]
 structopt = "0.3"
 pipeliner = "1.0"
-rand = "0.7"
+rand = "0.8"
 nix = "0.17"
 
 [profile.release]
