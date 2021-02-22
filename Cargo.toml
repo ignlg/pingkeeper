@@ -16,7 +16,7 @@ keywords = ["cli", "network", "linux", "macos", "tool"]
 structopt = "0.3"
 pipeliner = "1.0"
 rand = "0.7"
-nix = "0.17"
+nix = "0.20"
 
 [profile.release]
 debug = false
